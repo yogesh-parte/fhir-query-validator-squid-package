@@ -339,6 +339,9 @@ def test_sensitive_chained_parameter_sets_high_severity(mock_get_capability):
 
     assert result["validation_result"]["high_severity"] is True
     assert any("sensitive" in w.lower() for w in result["validation_result"]["warnings"])
+    assert result["final_output"]["pattern_detected"] is True
+    assert result["final_output"]["escalation"] == "human"
+    assert result["human_review"] is not None
 
 
 @patch("src.agentic_layer.graph.workflow_engine.cache_agent.get_capability_statement")

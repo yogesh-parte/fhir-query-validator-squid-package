@@ -7,6 +7,7 @@ Supports static Bearer tokens and OAuth2 client credentials (via authlib).
 from __future__ import annotations
 
 import hashlib
+import time
 from typing import Optional, Protocol
 
 from authlib.integrations.httpx_client import OAuth2Client
@@ -43,12 +44,16 @@ class OAuth2ClientCredentialsProvider:
         self._token_url = token_url
         self._scope = scope
         self._headers: Optional[dict[str, str]] = None
+        self._expires_at: float = 0.0
 
     def get_headers(self) -> dict[str, str]:
-        if self._headers is not None:
+        if self._headers is not None and time.time() < self._expires_at:
             return dict(self._headers)
         token = self._client.fetch_token(self._token_url, scope=self._scope)
         self._headers = {"Authorization": f"Bearer {token['access_token']}"}
+        expires_in = int(token.get("expires_in", 3600))
+        refresh_buffer_seconds = 60
+        self._expires_at = time.time() + max(expires_in - refresh_buffer_seconds, 0)
         return dict(self._headers)
 
 

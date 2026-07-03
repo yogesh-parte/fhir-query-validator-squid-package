@@ -1,18 +1,19 @@
 # Makefile — FHIR Query Validator Factory (Squid scaffold)
 
-.PHONY: help install sync lint test security demo demo-loops demo-agent-trace demo-mockhealth spec-check clean
+.PHONY: help install sync lint test test-unit security demo demo-loops demo-agent-trace demo-mockhealth spec-check clean
 
 help:
 	@echo "Available commands:"
 	@echo "  make install           - Install runtime + dev deps via uv"
 	@echo "  make sync              - Alias for install"
 	@echo "  make lint              - Run ruff check + format check"
-	@echo "  make test              - Run unit and integration tests"
+	@echo "  make test              - Run all tests with coverage gate (unit + integration)"
+	@echo "  make test-unit         - Run unit tests only with coverage gate"
 	@echo "  make security          - Run Bandit SAST and pip-audit"
 	@echo "  make spec-check        - Verify agent specs are present"
-	@echo "  make demo-loops        - Feedback loops demo (not yet implemented)"
-	@echo "  make demo-agent-trace  - Per-agent trace demo (not yet implemented)"
-	@echo "  make demo-mockhealth   - mock.health demo (not yet implemented)"
+	@echo "  make demo-loops        - Feedback loops demo against public HAPI server"
+	@echo "  make demo-agent-trace  - Per-agent trace + human pause/resume demo"
+	@echo "  make demo-mockhealth   - Feedback loops demo on mock.health"
 	@echo "  make clean             - Remove generated files and caches"
 
 install sync:
@@ -22,6 +23,9 @@ lint:
 	uv run ruff check src fhir_validator_agent scripts tests
 
 test:
+	uv run pytest tests/ -q --cov=src/agentic_layer --cov-report=term-missing --cov-fail-under=99
+
+test-unit:
 	uv run pytest tests/unit -q --cov=src/agentic_layer --cov-report=term-missing --cov-fail-under=99
 
 security:

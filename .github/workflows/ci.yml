@@ -29,8 +29,8 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check src fhir_validator_agent scripts tests
 
-      - name: Unit tests
-        run: uv run pytest tests/ -q
+      - name: Tests with coverage gate
+        run: uv run pytest tests/ -q --cov=src/agentic_layer --cov-report=term-missing --cov-fail-under=99
 
   security:
     runs-on: ubuntu-latest

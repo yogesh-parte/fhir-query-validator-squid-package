@@ -143,7 +143,7 @@ class QueryValidatorAgent:
             self._record_invalid_query(user_id, server_key, primary_error)
             stats = self._pattern_stats(user_id, server_key)
             result["pattern_stats"] = stats
-            result["pattern_detected"] = stats["learner_threshold_met"]
+            result["pattern_detected"] = stats["learner_threshold_met"] or high_severity
 
         return result
 

@@ -120,6 +120,19 @@ def test_sensitive_chained_parameter_sets_high_severity():
     assert any("sensitive" in warning.lower() for warning in result["warnings"])
 
 
+def test_high_severity_invalid_query_sets_pattern_detected_on_first_failure():
+    validator = QueryValidatorAgent()
+    result = validator.validate(
+        query_url="Patient?patient.unknown=value",
+        interpreted_capability=PATIENT_CAPABILITY,
+        user_id="high-severity-user",
+        server_key="hapi",
+    )
+    assert result["valid"] is False
+    assert result["high_severity"] is True
+    assert result["pattern_detected"] is True
+
+
 def test_chained_parameter_with_unknown_root_fails():
     validator = QueryValidatorAgent()
     result = validator.validate(

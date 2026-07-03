@@ -101,7 +101,10 @@ def test_resolve_auth_headers_public_server():
 @patch("src.agentic_layer.auth.provider.OAuth2Client")
 def test_oauth2_provider_fetches_token(mock_oauth_client):
     mock_client = MagicMock()
-    mock_client.fetch_token.return_value = {"access_token": "oauth-access-token"}
+    mock_client.fetch_token.return_value = {
+        "access_token": "oauth-access-token",
+        "expires_in": 3600,
+    }
     mock_oauth_client.return_value = mock_client
 
     provider = OAuth2ClientCredentialsProvider(
@@ -120,7 +123,10 @@ def test_oauth2_provider_fetches_token(mock_oauth_client):
 @patch("src.agentic_layer.auth.provider.OAuth2Client")
 def test_oauth2_provider_reuses_cached_token(mock_oauth_client):
     mock_client = MagicMock()
-    mock_client.fetch_token.return_value = {"access_token": "oauth-access-token"}
+    mock_client.fetch_token.return_value = {
+        "access_token": "oauth-access-token",
+        "expires_in": 3600,
+    }
     mock_oauth_client.return_value = mock_client
 
     provider = OAuth2ClientCredentialsProvider(
@@ -131,6 +137,30 @@ def test_oauth2_provider_reuses_cached_token(mock_oauth_client):
     provider.get_headers()
     provider.get_headers()
     mock_client.fetch_token.assert_called_once()
+
+
+@patch("src.agentic_layer.auth.provider.time.time")
+@patch("src.agentic_layer.auth.provider.OAuth2Client")
+def test_oauth2_provider_refreshes_expired_token(mock_oauth_client, mock_time):
+    mock_client = MagicMock()
+    mock_client.fetch_token.side_effect = [
+        {"access_token": "token-1", "expires_in": 120},
+        {"access_token": "token-2", "expires_in": 120},
+    ]
+    mock_oauth_client.return_value = mock_client
+    mock_time.side_effect = [1000.0, 2000.0, 2000.0]
+
+    provider = OAuth2ClientCredentialsProvider(
+        client_id="id",
+        client_secret="secret",
+        token_url="https://auth.example.com/token",
+    )
+    first = provider.get_headers()
+    second = provider.get_headers()
+
+    assert first == {"Authorization": "Bearer token-1"}
+    assert second == {"Authorization": "Bearer token-2"}
+    assert mock_client.fetch_token.call_count == 2
 
 
 def test_auth_cache_suffix_empty_without_auth():

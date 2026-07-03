@@ -237,6 +237,23 @@ def test_execute_workflow_learner_escalation(mock_get_capability):
 
 
 @patch("src.agentic_layer.graph.workflow_engine.cache_agent.get_capability_statement")
+def test_execute_workflow_human_escalation_on_high_severity_first_query(mock_get_capability):
+    mock_get_capability.return_value = PATIENT_CAPABILITY
+
+    state = execute_workflow({
+        "query_url": "Patient?subject.name=Smith",
+        "server_key": "hapi",
+        "user_id": "high-severity-first",
+        "mode": "validate_only",
+    })
+
+    assert state.validation_result["high_severity"] is True
+    assert state.pattern_detected is True
+    assert state.escalation_decision == "human"
+    assert state.human_review is not None
+
+
+@patch("src.agentic_layer.graph.workflow_engine.cache_agent.get_capability_statement")
 def test_execute_workflow_human_escalation(mock_get_capability):
     mock_get_capability.return_value = PATIENT_CAPABILITY
     user = "human-escalation-user"

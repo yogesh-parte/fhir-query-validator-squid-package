@@ -257,7 +257,10 @@ def execute_workflow(initial: dict[str, Any]) -> ValidationWorkflowState:
         user_id=state.user_id,
         server_key=state.server_key,
     )
-    state.pattern_detected = state.validation_result.get("pattern_detected", False)
+    high_severity = state.validation_result.get("high_severity", False)
+    state.pattern_detected = (
+        state.validation_result.get("pattern_detected", False) or high_severity
+    )
 
     if state.validation_result.get("valid") and state.mode == "validate_and_execute":
         print("\n=== [LOOP] Validation → Execution Loop ===")
