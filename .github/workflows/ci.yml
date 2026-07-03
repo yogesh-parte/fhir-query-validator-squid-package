@@ -30,7 +30,27 @@ jobs:
         run: uv run ruff format --check src fhir_validator_agent scripts tests
 
       - name: Tests with coverage gate
-        run: uv run pytest tests/ -q --cov=src/agentic_layer --cov-report=term-missing --cov-fail-under=99
+        run: uv run pytest tests/ -m "not integration" -q --cov=src/agentic_layer --cov-report=term-missing --cov-fail-under=99
+
+  integration-live:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Live integration tests (public servers)
+        run: uv run pytest tests/integration -m integration -q
 
   security:
     runs-on: ubuntu-latest
