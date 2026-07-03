@@ -59,8 +59,10 @@ filterwarnings = [
     "error",
     "ignore:'_UnionGenericAlias' is deprecated:DeprecationWarning",
     "ignore:BaseAgentConfig is deprecated:DeprecationWarning",
+    "ignore:SelectableGroups dict interface is deprecated:DeprecationWarning",
     "ignore::DeprecationWarning:google.adk",
     "ignore::DeprecationWarning:google.genai",
+    "ignore::DeprecationWarning:opentelemetry",
 ]
 
 [tool.coverage.run]
