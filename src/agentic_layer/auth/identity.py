@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-from typing import Optional
 
 
 def trust_client_user_id() -> bool:
@@ -18,9 +17,9 @@ def trust_client_user_id() -> bool:
 
 
 def resolve_workflow_user_id(
-    client_user_id: Optional[str],
-    auth_token: Optional[str],
-) -> Optional[str]:
+    client_user_id: str | None,
+    auth_token: str | None,
+) -> str | None:
     """
     Resolve the effective user_id for pattern history and human-gate pause checks.
 

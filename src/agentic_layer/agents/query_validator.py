@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ..utils.logging_safe import format_query_log_label
 from ..utils.query_parser import parse_query_url
 
 # Reconciled thresholds across specs (README priority fix #4).
-LEARNER_THRESHOLD = {"count": 3, "window_seconds": 600}   # 3+ in 10 minutes
-HUMAN_THRESHOLD = {"count": 5, "window_seconds": 900}     # 5+ in 15 minutes
+LEARNER_THRESHOLD = {"count": 3, "window_seconds": 600}  # 3+ in 10 minutes
+HUMAN_THRESHOLD = {"count": 5, "window_seconds": 900}  # 5+ in 15 minutes
 
 SENSITIVE_CHAIN_MARKERS = ("patient.", "subject.", "individual.")
 
@@ -28,16 +28,16 @@ class QueryValidatorAgent:
     def __init__(self) -> None:
         self._pattern_history: dict[str, list[tuple[float, str]]] = defaultdict(list)
 
-    def _history_key(self, user_id: str, server_key: Optional[str]) -> str:
+    def _history_key(self, user_id: str, server_key: str | None) -> str:
         return f"{user_id}:{server_key or 'default'}"
 
     def validate(
         self,
         query_url: str,
-        interpreted_capability: Dict[str, Any],
-        user_id: Optional[str] = None,
-        server_key: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        interpreted_capability: dict[str, Any],
+        user_id: str | None = None,
+        server_key: str | None = None,
+    ) -> dict[str, Any]:
         """Validate the query and detect patterns when user_id is provided."""
         print(f"[QueryValidator] Validating query: {format_query_log_label(query_url)}")
 
@@ -66,9 +66,7 @@ class QueryValidatorAgent:
             }
 
             if not parsed.params:
-                warnings.append(
-                    f"Query for '{parsed.resource_type}' has no search parameters."
-                )
+                warnings.append(f"Query for '{parsed.resource_type}' has no search parameters.")
 
             for param in parsed.params:
                 if param.name.startswith("_"):
@@ -150,7 +148,7 @@ class QueryValidatorAgent:
     def get_pattern_stats(
         self,
         user_id: str,
-        server_key: Optional[str] = None,
+        server_key: str | None = None,
     ) -> dict[str, Any]:
         return self._pattern_stats(user_id, server_key)
 
@@ -165,7 +163,7 @@ class QueryValidatorAgent:
     def _record_invalid_query(
         self,
         user_id: str,
-        server_key: Optional[str],
+        server_key: str | None,
         error_type: str,
     ) -> None:
         key = self._history_key(user_id, server_key)
@@ -181,7 +179,7 @@ class QueryValidatorAgent:
         cutoff = time.time() - window_seconds
         return sum(1 for ts, _ in history if ts >= cutoff)
 
-    def _pattern_stats(self, user_id: str, server_key: Optional[str]) -> dict[str, Any]:
+    def _pattern_stats(self, user_id: str, server_key: str | None) -> dict[str, Any]:
         history = self._pattern_history.get(self._history_key(user_id, server_key), [])
         learner_count = self._count_in_window(history, LEARNER_THRESHOLD["window_seconds"])
         human_count = self._count_in_window(history, HUMAN_THRESHOLD["window_seconds"])

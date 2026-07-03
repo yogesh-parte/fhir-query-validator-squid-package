@@ -5,15 +5,15 @@ Builds FHIR REST search query URLs from standard resource search parameters.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..utils.fhir_resource_registry import (
-    SearchParamSpec,
     encode_search_value,
     get_resource_spec,
     list_resource_types,
     registry_metadata,
 )
+
 _SPECIAL_PARAMS = frozenset({"_count", "_sort", "_include", "_revinclude", "_summary", "_elements"})
 
 
@@ -39,11 +39,11 @@ class QueryGeneratorAgent:
     def generate(
         self,
         resource_type: str,
-        criteria: Optional[dict[str, Any]] = None,
+        criteria: dict[str, Any] | None = None,
         *,
-        count: Optional[int] = None,
-        sort: Optional[str] = None,
-        interpreted_capability: Optional[dict[str, Any]] = None,
+        count: int | None = None,
+        sort: str | None = None,
+        interpreted_capability: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Generate a relative FHIR search query URL.
@@ -120,7 +120,7 @@ class QueryGeneratorAgent:
         resource_type: str,
         intent: str,
         *,
-        interpreted_capability: Optional[dict[str, Any]] = None,
+        interpreted_capability: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Generate a query from a short intent phrase using built-in templates.
@@ -136,9 +136,7 @@ class QueryGeneratorAgent:
                 "generated": False,
                 "query_url": "",
                 "resource_type": resource_type,
-                "errors": [
-                    f"Unknown intent '{intent}'. Available intents: {available}"
-                ],
+                "errors": [f"Unknown intent '{intent}'. Available intents: {available}"],
                 "warnings": [],
             }
 
@@ -148,9 +146,7 @@ class QueryGeneratorAgent:
                 "generated": False,
                 "query_url": "",
                 "resource_type": resource_type,
-                "errors": [
-                    f"Intent '{intent}' does not apply to resource type '{resource_type}'."
-                ],
+                "errors": [f"Intent '{intent}' does not apply to resource type '{resource_type}'."],
                 "warnings": [],
             }
 
@@ -162,19 +158,13 @@ class QueryGeneratorAgent:
 
     def _server_param_index(
         self,
-        interpreted_capability: Optional[dict[str, Any]],
+        interpreted_capability: dict[str, Any] | None,
         resource_type: str,
-    ) -> Optional[set[str]]:
+    ) -> set[str] | None:
         if not interpreted_capability:
             return None
-        resource_def = interpreted_capability.get("supported_resources", {}).get(
-            resource_type, {}
-        )
-        names = {
-            p.get("name")
-            for p in resource_def.get("search_params", [])
-            if p.get("name")
-        }
+        resource_def = interpreted_capability.get("supported_resources", {}).get(resource_type, {})
+        names = {p.get("name") for p in resource_def.get("search_params", []) if p.get("name")}
         return names
 
 

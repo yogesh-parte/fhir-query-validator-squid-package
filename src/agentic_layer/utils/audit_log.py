@@ -8,16 +8,16 @@ import json
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
 class AuditRecord:
     timestamp: float
     event_type: str
-    user_id: Optional[str]
-    server_key: Optional[str]
-    decision: Optional[str]
+    user_id: str | None
+    server_key: str | None
+    decision: str | None
     reasoning: str
     context: dict[str, Any] = field(default_factory=dict)
 
@@ -28,7 +28,7 @@ class AuditRecord:
 class AuditLog:
     """Append-only audit log with optional file persistence."""
 
-    def __init__(self, persist_path: Optional[str] = None) -> None:
+    def __init__(self, persist_path: str | None = None) -> None:
         self._records: list[AuditRecord] = []
         self._persist_path = Path(persist_path) if persist_path else None
         if self._persist_path and self._persist_path.exists():
@@ -39,10 +39,10 @@ class AuditLog:
         event_type: str,
         reasoning: str,
         *,
-        user_id: Optional[str] = None,
-        server_key: Optional[str] = None,
-        decision: Optional[str] = None,
-        context: Optional[dict[str, Any]] = None,
+        user_id: str | None = None,
+        server_key: str | None = None,
+        decision: str | None = None,
+        context: dict[str, Any] | None = None,
     ) -> AuditRecord:
         entry = AuditRecord(
             timestamp=time.time(),
@@ -63,8 +63,8 @@ class AuditLog:
     def query(
         self,
         *,
-        user_id: Optional[str] = None,
-        event_type: Optional[str] = None,
+        user_id: str | None = None,
+        event_type: str | None = None,
     ) -> list[AuditRecord]:
         results = self._records
         if user_id is not None:

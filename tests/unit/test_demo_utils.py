@@ -13,16 +13,20 @@ def test_parse_jsonl_events_ignores_non_json_lines():
 
 
 def test_parse_adk_events_from_stdout():
-    stdout = "\n".join([
-        json.dumps({"nodeInfo": {"path": "initialize_workflow"}}),
-        json.dumps({
-            "actions": {
-                "stateDelta": {
-                    "final_output": {"valid": True, "executed": False},
+    stdout = "\n".join(
+        [
+            json.dumps({"nodeInfo": {"path": "initialize_workflow"}}),
+            json.dumps(
+                {
+                    "actions": {
+                        "stateDelta": {
+                            "final_output": {"valid": True, "executed": False},
+                        }
+                    }
                 }
-            }
-        }),
-    ])
+            ),
+        ]
+    )
     summary = parse_adk_events(stdout)
     assert summary["node_paths"] == ["initialize_workflow"]
     assert summary["final_output"]["valid"] is True

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import time
-from typing import Optional, Protocol
+from typing import Protocol
 
 from authlib.integrations.httpx_client import OAuth2Client
 
@@ -16,8 +16,7 @@ from authlib.integrations.httpx_client import OAuth2Client
 class AuthProvider(Protocol):
     """Protocol for resolving Authorization headers."""
 
-    def get_headers(self) -> dict[str, str]:
-        ...
+    def get_headers(self) -> dict[str, str]: ...
 
 
 class BearerTokenProvider:
@@ -38,12 +37,12 @@ class OAuth2ClientCredentialsProvider:
         client_id: str,
         client_secret: str,
         token_url: str,
-        scope: Optional[str] = None,
+        scope: str | None = None,
     ) -> None:
         self._client = OAuth2Client(client_id=client_id, client_secret=client_secret)
         self._token_url = token_url
         self._scope = scope
-        self._headers: Optional[dict[str, str]] = None
+        self._headers: dict[str, str] | None = None
         self._expires_at: float = 0.0
 
     def get_headers(self) -> dict[str, str]:
@@ -57,7 +56,7 @@ class OAuth2ClientCredentialsProvider:
         return dict(self._headers)
 
 
-def build_auth_provider(settings: dict) -> Optional[AuthProvider]:
+def build_auth_provider(settings: dict) -> AuthProvider | None:
     """Build an auth provider from application settings."""
     if not settings.get("use_auth"):
         return None
@@ -86,8 +85,8 @@ def build_auth_provider(settings: dict) -> Optional[AuthProvider]:
 def resolve_auth_headers(
     requires_auth: bool,
     settings: dict,
-    auth_token_override: Optional[str] = None,
-    provider: Optional[AuthProvider] = None,
+    auth_token_override: str | None = None,
+    provider: AuthProvider | None = None,
 ) -> dict[str, str]:
     """
     Resolve HTTP headers for authenticated requests.

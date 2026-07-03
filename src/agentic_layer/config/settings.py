@@ -5,7 +5,6 @@ Supports multiple servers via server_key and basic authentication.
 
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional
 
 from ..auth.provider import AuthProvider, build_auth_provider, resolve_auth_headers
 from ..exceptions import UnknownServerKeyError
@@ -31,7 +30,7 @@ def _load_env_files() -> None:
 _load_env_files()
 
 # Built-in public test servers (immutable — never mutated at runtime).
-BASE_SERVERS: Dict[str, dict] = {
+BASE_SERVERS: dict[str, dict] = {
     "hapi": {
         "name": "HAPI FHIR",
         "base_url": "https://hapi.fhir.org/baseR4",
@@ -72,10 +71,10 @@ class ServerConfig:
     name: str
     base_url: str
     requires_auth: bool = False
-    auth_token: Optional[str] = None
+    auth_token: str | None = None
 
 
-_auth_provider_cache: Optional[AuthProvider] = None
+_auth_provider_cache: AuthProvider | None = None
 
 
 def get_settings() -> dict:
@@ -93,7 +92,7 @@ def get_settings() -> dict:
     }
 
 
-def _resolve_server_auth_token(server_info: dict, settings: dict) -> Optional[str]:
+def _resolve_server_auth_token(server_info: dict, settings: dict) -> str | None:
     """Resolve a server-specific API key/token from its dedicated env var."""
     env_var = server_info.get("auth_token_env")
     if env_var:
@@ -103,7 +102,7 @@ def _resolve_server_auth_token(server_info: dict, settings: dict) -> Optional[st
     return None
 
 
-def _server_registry(settings: dict) -> Dict[str, dict]:
+def _server_registry(settings: dict) -> dict[str, dict]:
     """Return a fresh registry snapshot; optionally overlay a protected server."""
     registry = dict(BASE_SERVERS)
     if settings.get("use_auth") and settings.get("server_base"):
@@ -115,7 +114,7 @@ def _server_registry(settings: dict) -> Dict[str, dict]:
     return registry
 
 
-def get_auth_provider() -> Optional[AuthProvider]:
+def get_auth_provider() -> AuthProvider | None:
     """Return a cached auth provider built from current settings."""
     global _auth_provider_cache
     settings = get_settings()
@@ -129,7 +128,7 @@ def get_auth_provider() -> Optional[AuthProvider]:
 
 def get_auth_headers(
     server: ServerConfig,
-    auth_token_override: Optional[str] = None,
+    auth_token_override: str | None = None,
 ) -> dict[str, str]:
     """Resolve Authorization headers for a server request."""
     if auth_token_override:
@@ -150,7 +149,7 @@ def get_auth_headers(
     )
 
 
-def get_server_config(server_key: Optional[str] = None) -> ServerConfig:
+def get_server_config(server_key: str | None = None) -> ServerConfig:
     """
     Get server configuration by key.
     Raises UnknownServerKeyError when an explicit unknown key is provided.

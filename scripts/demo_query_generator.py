@@ -20,8 +20,8 @@ from _demo_utils import add_project_root_to_path, summarize_final_output
 
 add_project_root_to_path()
 
-from src.agentic_layer.agents.query_generator_agent import QueryGeneratorAgent
-from src.agentic_layer.graph.validation_workflow import run_validation_workflow
+from src.agentic_layer.agents.query_generator_agent import QueryGeneratorAgent  # noqa: E402
+from src.agentic_layer.graph.validation_workflow import run_validation_workflow  # noqa: E402
 
 
 def main() -> None:
@@ -68,11 +68,13 @@ def main() -> None:
         return
 
     print("\n=== Validation Workflow ===")
-    result = run_validation_workflow({
-        "query_url": generated["query_url"],
-        "server_key": args.server,
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": generated["query_url"],
+            "server_key": args.server,
+            "mode": "validate_and_execute",
+        }
+    )
     summarize_final_output(result["final_output"])
 
 

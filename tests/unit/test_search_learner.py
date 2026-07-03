@@ -21,7 +21,7 @@ def test_search_learner_uses_capability_statement():
         },
     )
     assert "gender" in guidance["supported_parameters"]
-    assert "Patient?gender=example" == guidance["example"]
+    assert guidance["example"] == "Patient?gender=example"
 
 
 def test_search_learner_unknown_resource_suggestion():

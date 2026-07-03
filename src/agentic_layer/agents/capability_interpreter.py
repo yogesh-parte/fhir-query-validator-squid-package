@@ -3,7 +3,7 @@ CapabilityInterpreterAgent
 Dynamically interprets CapabilityStatement to support generalized validation.
 """
 
-from typing import Dict, Any, List
+from typing import Any
 
 # Modifiers commonly supported per FHIR search parameter type.
 _MODIFIERS_BY_TYPE: dict[str, list[str]] = {
@@ -34,7 +34,7 @@ class CapabilityInterpreterAgent:
     Specialist agent that extracts usable information from CapabilityStatement.
     """
 
-    def interpret(self, capability_statement: Dict[str, Any]) -> Dict[str, Any]:
+    def interpret(self, capability_statement: dict[str, Any]) -> dict[str, Any]:
         """
         Extract supported resources, search parameters, modifiers, and comparators.
         """
@@ -49,16 +49,18 @@ class CapabilityInterpreterAgent:
                     if not resource_type:
                         continue
 
-                    search_params: List[dict] = []
+                    search_params: list[dict] = []
                     for param in resource.get("searchParam", []):
                         param_type = param.get("type", "string")
-                        search_params.append({
-                            "name": param.get("name"),
-                            "type": param_type,
-                            "documentation": param.get("documentation"),
-                            "modifiers": _MODIFIERS_BY_TYPE.get(param_type, ["missing"]),
-                            "comparators": _COMPARATORS_BY_TYPE.get(param_type, []),
-                        })
+                        search_params.append(
+                            {
+                                "name": param.get("name"),
+                                "type": param_type,
+                                "documentation": param.get("documentation"),
+                                "modifiers": _MODIFIERS_BY_TYPE.get(param_type, ["missing"]),
+                                "comparators": _COMPARATORS_BY_TYPE.get(param_type, []),
+                            }
+                        )
 
                     supported[resource_type] = {
                         "search_params": search_params,

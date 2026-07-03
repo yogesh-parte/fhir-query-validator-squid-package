@@ -3,8 +3,6 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.agentic_layer.graph.nodes import (
     finalize_output,
     initialize_workflow,
@@ -54,10 +52,12 @@ def test_initialize_workflow_requires_query_url():
 
 
 def test_initialize_workflow_accepts_query_generation():
-    ctx = _ctx({
-        "query_generation": {"resource_type": "Patient", "intent": "male patients"},
-        "server_key": "hapi",
-    })
+    ctx = _ctx(
+        {
+            "query_generation": {"resource_type": "Patient", "intent": "male patients"},
+            "server_key": "hapi",
+        }
+    )
 
     asyncio.run(_run_node(initialize_workflow, ctx))
 
@@ -73,10 +73,12 @@ def test_initialize_workflow_accepts_valid_request():
 
 
 def test_run_validation_pipeline_skips_when_workflow_error_set():
-    ctx = _ctx({
-        "query_url": "Patient?gender=male",
-        "workflow_error": "blocked",
-    })
+    ctx = _ctx(
+        {
+            "query_url": "Patient?gender=male",
+            "workflow_error": "blocked",
+        }
+    )
 
     with patch("src.agentic_layer.graph.nodes.execute_workflow") as mock_execute:
         asyncio.run(_run_node(run_validation_pipeline, ctx))
@@ -92,11 +94,13 @@ def test_run_validation_pipeline_delegates_to_engine(mock_execute):
         execution_result={"executed": False},
         final_output={"valid": True, "executed": False},
     )
-    ctx = _ctx({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "mode": "validate_only",
-    })
+    ctx = _ctx(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "mode": "validate_only",
+        }
+    )
 
     asyncio.run(_run_node(run_validation_pipeline, ctx))
 
@@ -105,11 +109,13 @@ def test_run_validation_pipeline_delegates_to_engine(mock_execute):
 
 
 def test_finalize_output_builds_contract_when_missing():
-    ctx = _ctx({
-        "server_key": "hapi",
-        "validation_result": {"valid": True, "errors": [], "warnings": []},
-        "execution_result": {"executed": False},
-    })
+    ctx = _ctx(
+        {
+            "server_key": "hapi",
+            "validation_result": {"valid": True, "errors": [], "warnings": []},
+            "execution_result": {"executed": False},
+        }
+    )
 
     asyncio.run(_run_node(finalize_output, ctx))
 

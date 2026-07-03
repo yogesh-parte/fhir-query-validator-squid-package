@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -15,9 +15,9 @@ from ..agents import (
     CapabilityInterpreterAgent,
     HumanInterventionGate,
     QueryExecutionAgent,
+    QueryGeneratorAgent,
     QueryValidatorAgent,
     RuleAgent,
-    QueryGeneratorAgent,
     SearchLearnerAgent,
 )
 from ..auth.identity import resolve_workflow_user_id
@@ -50,7 +50,7 @@ class WorkflowAgents:
         self.audit_log._records.clear()
 
 
-_default_agents: Optional[WorkflowAgents] = None
+_default_agents: WorkflowAgents | None = None
 
 
 def _build_agents() -> WorkflowAgents:
@@ -85,7 +85,8 @@ def get_workflow_agents(*, isolate: bool = False) -> WorkflowAgents:
 
 def _sync_module_exports(agents: WorkflowAgents) -> None:
     """Keep legacy module-level aliases pointed at the default singleton."""
-    global _audit_log, cache_agent, interpreter, validator, executor, rule_agent, learner_agent, human_gate, query_generator
+    global _audit_log, cache_agent, interpreter, validator
+    global executor, rule_agent, learner_agent, human_gate, query_generator
     _audit_log = agents.audit_log
     cache_agent = agents.cache_agent
     interpreter = agents.interpreter
@@ -258,9 +259,7 @@ def execute_workflow(initial: dict[str, Any]) -> ValidationWorkflowState:
         server_key=state.server_key,
     )
     high_severity = state.validation_result.get("high_severity", False)
-    state.pattern_detected = (
-        state.validation_result.get("pattern_detected", False) or high_severity
-    )
+    state.pattern_detected = state.validation_result.get("pattern_detected", False) or high_severity
 
     if state.validation_result.get("valid") and state.mode == "validate_and_execute":
         print("\n=== [LOOP] Validation → Execution Loop ===")
@@ -290,12 +289,14 @@ def execute_workflow(initial: dict[str, Any]) -> ValidationWorkflowState:
                 interpreted_capability=state.interpreted_capability,
             )
         elif decision == "human":
-            state.human_review = agents.human_gate.request_human_review({
-                "query_url": state.query_url,
-                "user_id": state.user_id,
-                "server_key": state.server_key,
-                "validation_result": state.validation_result,
-            })
+            state.human_review = agents.human_gate.request_human_review(
+                {
+                    "query_url": state.query_url,
+                    "user_id": state.user_id,
+                    "server_key": state.server_key,
+                    "validation_result": state.validation_result,
+                }
+            )
     else:
         state.escalation_decision = "none"
 

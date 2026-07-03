@@ -5,14 +5,14 @@ Google ADK graph workflow for FHIR query validation with loop engineering.
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from google.adk import Workflow
 
 from ..state.workflow_state import ValidationWorkflowState
 from .nodes import finalize_output, initialize_workflow, run_validation_pipeline
 from .workflow_engine import execute_workflow
-
 
 # ADK 2.0 graph workflow — runnable via `adk run` / `adk web` / agents-cli.
 # Escalation (learner/human) runs inside execute_workflow(); the graph is a
@@ -37,9 +37,6 @@ def run_validation_workflow(
     Synchronous workflow entry point for demos, scripts, and tests.
     Delegates to the shared workflow engine used by ADK graph nodes.
     """
-    if isinstance(state, ValidationWorkflowState):
-        initial = state.model_dump()
-    else:
-        initial = dict(state)
+    initial = state.model_dump() if isinstance(state, ValidationWorkflowState) else dict(state)
     result = execute_workflow(initial)
     return result.model_dump()

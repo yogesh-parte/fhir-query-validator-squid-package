@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import httpx
 import pytest
 
 from src.agentic_layer.agents.human_gate import HumanInterventionGate
@@ -50,11 +49,13 @@ def test_query_execution_disables_redirect_following(mock_client_class):
 
 def test_human_gate_auth_disabled_by_default():
     gate = HumanInterventionGate()
-    review = gate.request_human_review({
-        "query_url": "Patient?bad=true",
-        "user_id": "user-1",
-        "validation_result": {"pattern_stats": {"human_threshold_met": True}},
-    })
+    review = gate.request_human_review(
+        {
+            "query_url": "Patient?bad=true",
+            "user_id": "user-1",
+            "validation_result": {"pattern_stats": {"human_threshold_met": True}},
+        }
+    )
     resolved = gate.submit_review_decision(
         review["review_id"],
         reviewer="operator",
@@ -69,11 +70,13 @@ def test_human_gate_auth_required_rejects_missing_token(monkeypatch):
     monkeypatch.setenv("FHIR_HUMAN_GATE_OPERATOR_TOKEN", "secret-operator-token")
 
     gate = HumanInterventionGate()
-    review = gate.request_human_review({
-        "query_url": "Patient?bad=true",
-        "user_id": "user-2",
-        "validation_result": {"pattern_stats": {"human_threshold_met": True}},
-    })
+    review = gate.request_human_review(
+        {
+            "query_url": "Patient?bad=true",
+            "user_id": "user-2",
+            "validation_result": {"pattern_stats": {"human_threshold_met": True}},
+        }
+    )
 
     with pytest.raises(HumanGateAuthError):
         gate.submit_review_decision(
@@ -89,11 +92,13 @@ def test_human_gate_auth_required_accepts_valid_token(monkeypatch):
     monkeypatch.setenv("FHIR_HUMAN_GATE_OPERATOR_TOKEN", "secret-operator-token")
 
     gate = HumanInterventionGate()
-    review = gate.request_human_review({
-        "query_url": "Patient?bad=true",
-        "user_id": "user-3",
-        "validation_result": {"pattern_stats": {"human_threshold_met": True}},
-    })
+    review = gate.request_human_review(
+        {
+            "query_url": "Patient?bad=true",
+            "user_id": "user-3",
+            "validation_result": {"pattern_stats": {"human_threshold_met": True}},
+        }
+    )
 
     resolved = gate.submit_review_decision(
         review["review_id"],
@@ -129,30 +134,38 @@ def test_resolve_workflow_user_id_derives_from_token_when_untrusted(monkeypatch)
 def test_isolated_workflows_do_not_share_pattern_history(mock_get_capability, monkeypatch):
     mock_get_capability.return_value = {
         "resourceType": "CapabilityStatement",
-        "rest": [{
-            "resource": [{
-                "type": "Patient",
-                "searchParam": [{"name": "gender", "type": "token"}],
-            }],
-        }],
+        "rest": [
+            {
+                "resource": [
+                    {
+                        "type": "Patient",
+                        "searchParam": [{"name": "gender", "type": "token"}],
+                    }
+                ],
+            }
+        ],
     }
 
     monkeypatch.setenv("FHIR_WORKFLOW_ISOLATE_STATE", "true")
 
     for _ in range(3):
-        execute_workflow({
+        execute_workflow(
+            {
+                "query_url": "Patient?not_a_real_param=true",
+                "server_key": "hapi",
+                "user_id": "isolated-learner",
+                "mode": "validate_only",
+            }
+        )
+
+    isolated_state = execute_workflow(
+        {
             "query_url": "Patient?not_a_real_param=true",
             "server_key": "hapi",
-            "user_id": "isolated-learner",
+            "user_id": "isolated-learner-2",
             "mode": "validate_only",
-        })
-
-    isolated_state = execute_workflow({
-        "query_url": "Patient?not_a_real_param=true",
-        "server_key": "hapi",
-        "user_id": "isolated-learner-2",
-        "mode": "validate_only",
-    })
+        }
+    )
 
     assert isolated_state.escalation_decision != "learner"
 

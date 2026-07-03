@@ -10,7 +10,7 @@ import json
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import quote
 
 _DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "fhir_standard_search_params.json"
@@ -44,7 +44,7 @@ class ResourceSpec:
     def param_names(self) -> list[str]:
         return [p.name for p in self.search_params]
 
-    def get_param(self, name: str) -> Optional[SearchParamSpec]:
+    def get_param(self, name: str) -> SearchParamSpec | None:
         for param in self.search_params:
             if param.name == name:
                 return param
@@ -93,9 +93,7 @@ def get_resource_spec(resource_type: str) -> ResourceSpec:
 
     if match is None:
         known = ", ".join(sorted(resources.keys()))
-        raise ValueError(
-            f"Unknown resource_type '{resource_type}'. Known types: {known}"
-        )
+        raise ValueError(f"Unknown resource_type '{resource_type}'. Known types: {known}")
 
     canonical_name, payload = match
     params = tuple(

@@ -24,7 +24,6 @@ from typing import Any
 
 from _demo_utils import (
     add_project_root_to_path,
-    mockhealth_api_key,
     print_scenario_header,
     require_mockhealth_key,
     reset_workflow_singletons,
@@ -32,8 +31,8 @@ from _demo_utils import (
 
 add_project_root_to_path()
 
-from src.agentic_layer.graph import workflow_engine
-from src.agentic_layer.graph.validation_workflow import run_validation_workflow
+from src.agentic_layer.graph import workflow_engine  # noqa: E402
+from src.agentic_layer.graph.validation_workflow import run_validation_workflow  # noqa: E402
 
 
 def _agent_steps(state: dict[str, Any]) -> list[str]:
@@ -42,7 +41,10 @@ def _agent_steps(state: dict[str, Any]) -> list[str]:
     if state.get("capability_statement"):
         resources = state.get("interpreted_capability", {}).get("supported_resources", {})
         resource_list = ", ".join(sorted(resources.keys())[:8]) or "none"
-        steps.append(f"[CacheAgent] CapabilityStatement fetched ({len(resources)} resources: {resource_list})")
+        steps.append(
+            f"[CacheAgent] CapabilityStatement fetched "
+            f"({len(resources)} resources: {resource_list})"
+        )
     elif state.get("workflow_error"):
         steps.append(f"[CacheAgent] Skipped — {state['workflow_error']}")
     else:
@@ -84,7 +86,8 @@ def _agent_steps(state: dict[str, Any]) -> list[str]:
     escalation = state.get("escalation_decision") or state.get("final_output", {}).get("escalation")
     if escalation and escalation != "none":
         audit = state.get("escalation_audit", {})
-        steps.append(f"[RuleAgent] Escalation decision: {escalation} — {audit.get('reasoning', 'n/a')}")
+        reasoning = audit.get("reasoning", "n/a")
+        steps.append(f"[RuleAgent] Escalation decision: {escalation} — {reasoning}")
     else:
         steps.append("[RuleAgent] No escalation (decision=none)")
 
@@ -142,16 +145,18 @@ def format_agent_trace(state: dict[str, Any]) -> str:
     ]
     lines.extend(f"  {step}" for step in _agent_steps(state))
     lines.extend(_audit_section(state.get("user_id")))
-    lines.extend([
-        "",
-        "OUTCOME",
-        "-" * 78,
-        f"  Valid              : {final.get('valid')}",
-        f"  Escalation         : {final.get('escalation')}",
-        f"  Human Review       : {final.get('human_review_required')}",
-        f"  Executed           : {final.get('executed')}",
-        "=" * 78,
-    ])
+    lines.extend(
+        [
+            "",
+            "OUTCOME",
+            "-" * 78,
+            f"  Valid              : {final.get('valid')}",
+            f"  Escalation         : {final.get('escalation')}",
+            f"  Human Review       : {final.get('human_review_required')}",
+            f"  Executed           : {final.get('executed')}",
+            "=" * 78,
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -170,12 +175,14 @@ def run_workflow(
         user_id=user_id,
         mode=mode,
     )
-    result = run_validation_workflow({
-        "query_url": query_url,
-        "server_key": server_key,
-        "user_id": user_id,
-        "mode": mode,
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": query_url,
+            "server_key": server_key,
+            "user_id": user_id,
+            "mode": mode,
+        }
+    )
     print(format_agent_trace(result))
     return result
 
@@ -187,12 +194,14 @@ def run_demo(server_key: str, export_path: str | None) -> None:
     traces: list[dict[str, Any]] = []
 
     reset_workflow_singletons()
-    traces.append(run_workflow(
-        name="Valid Query — Full Pipeline",
-        query_url="Patient?gender=male",
-        server_key=server_key,
-        user_id="trace-user-valid",
-    ))
+    traces.append(
+        run_workflow(
+            name="Valid Query — Full Pipeline",
+            query_url="Patient?gender=male",
+            server_key=server_key,
+            user_id="trace-user-valid",
+        )
+    )
 
     reset_workflow_singletons()
     learner_state = None
@@ -227,11 +236,13 @@ def run_demo(server_key: str, export_path: str | None) -> None:
             rationale="Demo resume after human review.",
         )
         print(f"Resumed: {resolution['resumed']} | Decision: {resolution['review']['decision']}")
-        traces.append({
-            "event": "human_review_resolved",
-            "review_id": review_id,
-            "resolution": resolution,
-        })
+        traces.append(
+            {
+                "event": "human_review_resolved",
+                "review_id": review_id,
+                "resolution": resolution,
+            }
+        )
 
         resumed = run_workflow(
             name="Post-Resume Valid Query",
@@ -256,7 +267,9 @@ def run_demo(server_key: str, export_path: str | None) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Agent traceability demo for FHIR query validation.")
+    parser = argparse.ArgumentParser(
+        description="Agent traceability demo for FHIR query validation."
+    )
     parser.add_argument(
         "--server",
         default="hapi",

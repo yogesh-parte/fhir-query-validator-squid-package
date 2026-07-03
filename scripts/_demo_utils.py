@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +40,9 @@ def reset_workflow_singletons() -> None:
     reset_singletons()
 
 
-def print_scenario_header(name: str, *, query_url: str, server_key: str, user_id: str, mode: str) -> None:
+def print_scenario_header(
+    name: str, *, query_url: str, server_key: str, user_id: str, mode: str
+) -> None:
     print("\n" + "=" * 78)
     print(f"SCENARIO: {name}")
     print("=" * 78)

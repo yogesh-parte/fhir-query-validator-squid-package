@@ -1,243 +1,174 @@
-# FHIR Query Validator Factory — Squid + Grok Build Implementation Package
+# FHIR Query Validator Factory
 
 **Version:** 1.0  
-**Date:** 2026-07-03  
-**Purpose:** Ready-to-use specification package + step-by-step guide to implement (or re-implement) the FHIR Query Validator using the **Squid Software Factory** powered by **Grok Build**.
+**Date:** 2026-07-03
 
-This package contains high-quality, Squid-optimized markdown specifications extracted and adapted from the original `yogesh-parte/fhir-query-validator-factory` repository, plus new agent specs and a complete implementation guide.
+A spec-driven, production-grade **Generalized FHIR Query Validator** built with the [Squid Software Factory](https://github.com/iusztinpaul/squid) and [Grok Build](https://x.ai/cli). The system validates FHIR search queries against live `CapabilityStatement` metadata, executes valid queries, detects repeat failure patterns, escalates to human review when thresholds are met, and produces full audit trails.
+
+This repository contains the complete implementation — not just specifications.
 
 ---
 
-## What's Included
+## Status
+
+| Area | State |
+|------|-------|
+| Core agents | Implemented (Cache, CapabilityInterpreter, QueryValidator, QueryExecution, Rule, SearchLearner, HumanGate) |
+| Workflow engine | Python-native (`src/agentic_layer/graph/workflow_engine.py`) |
+| ADK entrypoint | Thin wrapper (`fhir_validator_agent/`) — see [ADR-002](docs/adr/002-python-native-workflow-adk-wrapper.md) |
+| Tests | 197 passing; **≥99%** coverage on `src/agentic_layer` |
+| CI | GitHub Actions — lint, format, tests, security scan |
+| Demos | Public HAPI, mock.health, traceability, ADK |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Install and test
+
+```bash
+git clone https://github.com/yogesh-parte/fhir-query-validator-squid-package.git
+cd fhir-query-validator-squid-package
+
+uv sync --group dev
+make test
+```
+
+### Configure (optional)
+
+For public servers (HAPI, Firely, etc.) no configuration is required. For authenticated servers:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local — see docs/configuration.md
+```
+
+### Run demos
+
+```bash
+make demo-loops          # Feedback loops against public HAPI server
+make demo-agent-trace    # Per-agent trace + human pause/resume
+make demo-mockhealth     # Authenticated mock.health demo (requires MOCK_HEALTH_API_KEY)
+```
+
+See [scripts/](scripts/) and [docs/public-test-servers.md](docs/public-test-servers.md) for details.
+
+---
+
+## Project Structure
 
 ```
 fhir-query-validator-squid-package/
-├── README.md
-├── AGENTS.md
+├── AGENTS.md                    # Agent conventions (source of truth for all agents)
 ├── specs/
-│   └── fhir-query-validator-factory.md
+│   └── fhir-query-validator-factory.md   # Master spec
 ├── docs/
-│   ├── spec/
-│   │   ├── cache-agent-spec.md
-│   │   ├── query-validation-spec.md
-│   │   ├── query-execution-spec.md
-│   │   ├── rule-and-learner-spec.md
-│   │   ├── human-intervention-spec.md
-│   │   └── README.md                 # Explains spec structure & usage
-│   └── diagrams/
-│       ├── squid-fhir-architecture.mmd
-│       └── squid-pipeline-sequence.mmd
-├── planning/
-│   └── phase-6-squid-migration.md
-└── (zip archive also available)
+│   ├── spec/                    # Per-agent specifications
+│   ├── architecture.md
+│   ├── traceability.md
+│   ├── loop-engineering.md
+│   ├── configuration.md
+│   └── adr/                     # Architecture Decision Records
+├── src/agentic_layer/           # Core implementation
+│   ├── agents/                  # Specialist agents
+│   ├── auth/                    # Bearer + OAuth2 providers
+│   ├── config/                  # pydantic-settings + server registry
+│   ├── graph/                   # Workflow engine + graph nodes
+│   └── utils/                   # Audit log, query parser, URL safety
+├── fhir_validator_agent/          # Google ADK root agent entrypoint
+├── scripts/                     # Demo and operator scripts
+├── tests/                       # Unit + integration tests
+├── tasks/done/                  # Completed Squid implementation tasks (001–019)
+├── pyproject.toml
+├── Makefile
+└── .github/workflows/ci.yml
 ```
 
-All five agent specifications are now complete and consistent.
-
 ---
 
-## Quick Start (Recommended Flow)
+## Development Commands
 
-1. **Install Grok Build** (if not already installed)
-   ```bash
-   curl -fsSL https://x.ai/cli/install.sh | bash
-   ```
-   Sign in with your SuperGrok account.
-
-2. **Create a new project folder** (recommended for clean implementation)
-   ```bash
-   mkdir fhir-query-validator-squid-impl
-   cd fhir-query-validator-squid-impl
-   git init
-   ```
-
-3. **Copy this entire package** into your new project (or symlink/reference the specs).
-
-4. **Install Squid plugin** inside Grok Build
-   ```bash
-   grok          # start Grok Build in the project
-   /plugin marketplace add iusztinpaul/squid
-   /plugin install squid@iusztinpaul
-   ```
-
-5. **Scaffold the project** (optional but recommended)
-   ```bash
-   /squid-scaffold
-   ```
-   Choose **Python backend** (FastAPI + uv recommended).
-
-6. **Copy `AGENTS.md`** from this package to the root of your new project and customize it.
-
-7. **Run planning**
-   ```bash
-   /squid-plan specs/fhir-query-validator-factory.md
-   ```
-   Review the generated plan + ADR and **approve**.
-
-8. **Implement**
-   ```bash
-   /squid-implement-night
-   ```
-   Or run task-by-task for more control:
-   ```bash
-   /squid-implement-task "Implement CacheAgent with ETag/304 support"
-   ```
-
-9. **Human gates**
-   - Approve plan (first gate)
-   - Review PRs and final merge after CI green (second gate)
-
----
-
-## Full Step-by-Step Implementation Guide
-
-### Phase 0: Preparation
-
-1. Ensure you have a **SuperGrok** subscription (required for Grok Build).
-2. Install Grok Build as shown above.
-3. Clone or create your target repository.
-4. Copy the contents of this `fhir-query-validator-squid-package` into it (especially `specs/` and `AGENTS.md`).
-5. (Optional) Also copy relevant files from your original `fhir-query-validator-factory` repo (`docs/architecture.md`, `docs/traceability.md`, `docs/loop-engineering.md`, tests, etc.) for reference.
-
-### Phase 1: Project Constitution (`AGENTS.md`)
-
-- The included `AGENTS.md` is already tailored for this project.
-- It defines:
-  - Tech stack (Python + uv + ruff + Pydantic + optional Google ADK 2.0)
-  - Coding standards
-  - Testing requirements (≥99% coverage)
-  - Traceability & human-gate policy
-  - How to work with Squid
-- **Action**: Copy it to project root and review/adjust as needed.
-
-### Phase 2: Master Planning
-
-The file `specs/fhir-query-validator-factory.md` is the **single source of truth** for the entire feature.
-
-It includes:
-- North star and goals
-- High-level architecture reference
-- Cross-cutting requirements (traceability, security, escalation)
-- Acceptance criteria
-- References to all individual agent specs
-
-Run:
 ```bash
-/squid-plan specs/fhir-query-validator-factory.md
+make install      # Install runtime + dev dependencies (uv sync)
+make lint         # Ruff check
+make test         # Full test suite with ≥99% coverage gate
+make test-unit    # Unit tests only
+make security     # Bandit SAST + pip-audit
+make spec-check   # Verify all agent specs are present
+make clean        # Remove caches and coverage artifacts
 ```
 
-Squid’s Product Architect will produce a detailed task breakdown and ADR. Review it carefully before approving.
+---
 
-### Phase 3: Agent Specifications (Detailed)
+## Architecture
 
-Use these as the authoritative definition for each specialist agent:
+The workflow engine orchestrates specialist agents with explicit feedback loops:
 
-| File                              | Purpose                              | Status in this package |
-|-----------------------------------|--------------------------------------|------------------------|
-| `docs/spec/cache-agent-spec.md`   | CapabilityStatement caching + ETag/304 | Complete              |
-| `docs/spec/query-validation-spec.md` | Core query validation logic       | Complete (from original) |
-| `docs/spec/rule-and-learner-spec.md` | Pattern detection + escalation + learning | Complete           |
-| `docs/spec/query-execution-spec.md` | Execute valid queries (optional)   | Template ready — add using same format |
-| `docs/spec/human-intervention-spec.md` | Human gate + pause/resume        | Template ready — add using same format |
+```mermaid
+flowchart LR
+    Cache[CacheAgent] --> Cap[CapabilityInterpreter]
+    Cap --> Val[QueryValidator]
+    Val --> Exec[QueryExecution]
+    Val --> Rule[RuleAgent]
+    Rule --> Learner[SearchLearner]
+    Rule --> Human[HumanGate]
+```
 
-All specs follow a consistent structure:
-- Overview + Goals
-- Inputs / Outputs (with JSON examples)
-- Core Behavior
-- Feedback Loops / Escalation
-- Acceptance Criteria
-- Edge Cases & Open Questions
+- **Python-native engine** is the source of truth for orchestration and business logic.
+- **ADK wrapper** delegates to the engine — no duplicated validation logic.
+- **Human-in-the-loop** gates are configurable; high-severity queries escalate on first occurrence.
+- **Traceability** — every agent decision is logged and exportable as JSON.
 
-### Phase 4: Implementation with Squid
+Full details: [docs/architecture.md](docs/architecture.md) · [docs/traceability.md](docs/traceability.md) · [docs/loop-engineering.md](docs/loop-engineering.md)
 
-**Recommended approaches:**
+---
 
-**A. Full automated run (good for experienced users)**
+## Agent Specifications
+
+| Spec | Agent |
+|------|-------|
+| [cache-agent-spec.md](docs/spec/cache-agent-spec.md) | CapabilityStatement caching + ETag/304 |
+| [query-validation-spec.md](docs/spec/query-validation-spec.md) | Core query validation |
+| [query-execution-spec.md](docs/spec/query-execution-spec.md) | Execute valid FHIR searches |
+| [rule-and-learner-spec.md](docs/spec/rule-and-learner-spec.md) | Pattern detection, escalation, learning |
+| [human-intervention-spec.md](docs/spec/human-intervention-spec.md) | Human gate + pause/resume |
+
+Master spec: [specs/fhir-query-validator-factory.md](specs/fhir-query-validator-factory.md)
+
+---
+
+## Extending with Squid
+
+This project was built via the Squid factory workflow. To add features or re-plan:
+
+1. Update or add specs in `specs/` or `docs/spec/`.
+2. Run `/squid-plan specs/fhir-query-validator-factory.md` in Grok Build.
+3. Implement via `/squid-implement-task` or `/squid-implement-night`.
+4. Ensure `make test` and `make security` pass before merge.
+
+Squid plugin setup:
+
 ```bash
-/squid-implement-night
+grok
+/plugin marketplace add iusztinpaul/squid
+/plugin install squid@iusztinpaul
 ```
 
-**B. Controlled task-by-task (recommended while learning)**
-```bash
-/squid-implement-task "Implement CacheAgent according to cache-agent-spec.md"
-```
-
-Squid will:
-- Create git worktrees
-- Have SWE implement + commit per task
-- Have Tester write and verify tests
-- Create PR
-- Run PR Reviewer + On-Call (CI)
-- Only merge after you approve
-
-### Phase 5: Quality & Human Gates
-
-- All code must pass the quality gates defined in `AGENTS.md` (tests, security, traceability).
-- Use `/squid-review` and `/squid-refactor` as needed.
-- Final human squash-merge only after CI is green.
-
-### Phase 6: Post-Implementation
-
-After the factory run:
-- Run your existing test commands (`make test`, `make security`)
-- Add observability (Langfuse) if desired
-- Update `docs/` with any new decisions
-- Create demos matching the original (`demo-loops`, `demo-agent-trace`, etc.)
-- Deploy (Cloud Run / Agent Engine patterns from original architecture)
+All generated code must follow [AGENTS.md](AGENTS.md).
 
 ---
 
-## Key Design Decisions Captured
+## References
 
-- **Spec-driven**: Everything starts from markdown specs in `specs/` and `docs/spec/`.
-- **Specialist agents**: CacheAgent, QueryValidator, Rule+Learner, Execution, Human Gate.
-- **Explicit feedback loops**: Caching, pattern detection, learning, escalation.
-- **Human-in-the-loop**: Configurable thresholds + pause/resume gates.
-- **Traceability first**: Per-agent audit trails + exportable JSON bundles.
-- **Security & compliance**: OWASP-hardened, secrets via `.env.local` only.
-- **High test bar**: ~99% coverage target on core logic.
-
-These decisions are documented in the master spec and `AGENTS.md`.
+- Original factory repo: [yogesh-parte/fhir-query-validator-factory](https://github.com/yogesh-parte/fhir-query-validator-factory)
+- Squid: [iusztinpaul/squid](https://github.com/iusztinpaul/squid)
+- Grok Build: [x.ai/cli](https://x.ai/cli)
 
 ---
 
-## How to Extend This Package
-
-- Add the two missing specs using the same template as the ones provided.
-- Create additional ADRs in `docs/adr/`.
-- Add implementation-specific notes in `planning/`.
-- Update the master spec when requirements change.
-- Re-run `/squid-plan` on updated specs for incremental development.
-
----
-
-## References & Sources
-
-This package is derived from and fully compatible with:
-- Original repository: https://github.com/yogesh-parte/fhir-query-validator-factory
-- Squid: https://github.com/iusztinpaul/squid
-- Grok Build (xAI): https://x.ai/cli
-
-All specifications preserve the original intent, acceptance criteria, and responsible AI principles (human oversight, traceability, security).
-
----
-
-## Next Steps & Support
-
-After copying this package:
-
-1. Start with `/squid-plan specs/fhir-query-validator-factory.md`
-2. If you want me (Grok) to help further:
-   - Draft the two remaining agent specs (`query-execution-spec.md` and `human-intervention-spec.md`)
-   - Generate supporting diagrams (C4, sequence, or Mermaid)
-   - Create a sample `planning/phase-6-squid-migration.md`
-   - Review generated code or plans
-
-Just paste any output from Squid or ask for the next piece.
-
-**This package gives you everything you need to turn your existing high-quality specs into a production-grade implementation using a professional multi-agent software factory.**
-
-Happy building! 🚀
-
----
-*Package maintained as part of ongoing work on practical multi-agent healthcare AI systems.*
+*Maintained as part of ongoing work on practical, auditable multi-agent healthcare AI systems.*

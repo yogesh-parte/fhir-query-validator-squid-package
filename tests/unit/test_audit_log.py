@@ -1,7 +1,5 @@
 """Unit tests for structured audit logging."""
 
-import json
-
 from src.agentic_layer.utils.audit_log import AuditLog
 
 
