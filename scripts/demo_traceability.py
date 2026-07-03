@@ -13,7 +13,7 @@ from _demo_utils import add_project_root_to_path
 
 add_project_root_to_path()
 
-from src.agentic_layer.graph.validation_workflow import run_validation_workflow
+from src.agentic_layer.graph.validation_workflow import run_validation_workflow  # noqa: E402
 
 
 def format_trace(state: dict) -> str:
@@ -61,7 +61,7 @@ def run_trace_demo():
         "query_url": "Patient?gender=male",
         "server_key": "hapi",
         "user_id": "user-alice",
-        "mode": "validate_and_execute"
+        "mode": "validate_and_execute",
     }
     print("SCENARIO 1: Normal Valid Query")
     result1 = run_validation_workflow(state1)
@@ -75,7 +75,7 @@ def run_trace_demo():
             "query_url": "Patient?invalid_param=true",
             "server_key": "hapi",
             "user_id": "user-bob",
-            "mode": "validate_and_execute"
+            "mode": "validate_and_execute",
         }
         result2 = run_validation_workflow(state2)
         print(format_trace(result2))

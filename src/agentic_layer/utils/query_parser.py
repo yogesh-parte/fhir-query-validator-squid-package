@@ -6,22 +6,23 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Optional
 from urllib.parse import parse_qsl, urlparse
 
-FHIR_MODIFIERS = frozenset({
-    "exact",
-    "contains",
-    "text",
-    "in",
-    "not-in",
-    "below",
-    "above",
-    "type",
-    "identifier",
-    "of-type",
-    "missing",
-})
+FHIR_MODIFIERS = frozenset(
+    {
+        "exact",
+        "contains",
+        "text",
+        "in",
+        "not-in",
+        "below",
+        "above",
+        "type",
+        "identifier",
+        "of-type",
+        "missing",
+    }
+)
 
 FHIR_COMPARATORS = frozenset({"eq", "ne", "gt", "lt", "ge", "le", "sa", "eb", "ap"})
 
@@ -35,8 +36,8 @@ CHAIN_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$")
 class ParsedSearchParam:
     name: str
     value: str = ""
-    modifier: Optional[str] = None
-    comparator: Optional[str] = None
+    modifier: str | None = None
+    comparator: str | None = None
     chained: bool = False
 
 
@@ -47,14 +48,14 @@ class ParsedQuery:
     raw_query: str = ""
 
 
-def _extract_comparator(value: str) -> tuple[Optional[str], str]:
+def _extract_comparator(value: str) -> tuple[str | None, str]:
     for prefix in _COMPARATOR_PREFIXES:
         if value.startswith(prefix) and len(value) > len(prefix):
-            return prefix, value[len(prefix):]
+            return prefix, value[len(prefix) :]
     return None, value
 
 
-def _split_param_name(raw_name: str) -> tuple[str, Optional[str], bool]:
+def _split_param_name(raw_name: str) -> tuple[str, str | None, bool]:
     chained = bool(CHAIN_PATTERN.match(raw_name))
     if chained:
         return raw_name, None, True

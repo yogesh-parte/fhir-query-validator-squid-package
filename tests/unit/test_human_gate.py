@@ -3,15 +3,17 @@ from src.agentic_layer.agents.human_gate import HumanInterventionGate
 
 def test_human_gate_pause_notify_and_resume():
     gate = HumanInterventionGate()
-    review = gate.request_human_review({
-        "query_url": "Patient?bad=true",
-        "user_id": "user-paused",
-        "server_key": "hapi",
-        "validation_result": {
-            "pattern_stats": {"human_threshold_met": True},
-            "high_severity": False,
-        },
-    })
+    review = gate.request_human_review(
+        {
+            "query_url": "Patient?bad=true",
+            "user_id": "user-paused",
+            "server_key": "hapi",
+            "validation_result": {
+                "pattern_stats": {"human_threshold_met": True},
+                "high_severity": False,
+            },
+        }
+    )
 
     assert review["paused"] is True
     assert review["severity"] in {"high", "medium", "critical"}
@@ -30,12 +32,22 @@ def test_human_gate_pause_notify_and_resume():
 def test_classify_severity_levels():
     gate = HumanInterventionGate()
     assert gate.classify_severity({"high_severity": True}).value == "critical"
-    assert gate.classify_severity({
-        "pattern_stats": {"human_threshold_met": True},
-    }).value == "high"
-    assert gate.classify_severity({
-        "pattern_stats": {"learner_threshold_met": True},
-    }).value == "medium"
+    assert (
+        gate.classify_severity(
+            {
+                "pattern_stats": {"human_threshold_met": True},
+            }
+        ).value
+        == "high"
+    )
+    assert (
+        gate.classify_severity(
+            {
+                "pattern_stats": {"learner_threshold_met": True},
+            }
+        ).value
+        == "medium"
+    )
     assert gate.classify_severity({}).value == "low"
 
 
@@ -57,21 +69,25 @@ def test_submit_review_decision_unknown_review_raises():
 
 def test_request_human_review_defaults_anonymous_user():
     gate = HumanInterventionGate()
-    review = gate.request_human_review({
-        "query_url": "Patient?bad=true",
-        "validation_result": {"pattern_stats": {"human_threshold_met": True}},
-    })
+    review = gate.request_human_review(
+        {
+            "query_url": "Patient?bad=true",
+            "validation_result": {"pattern_stats": {"human_threshold_met": True}},
+        }
+    )
     assert review["context"].get("user_id") is None
     assert gate.is_paused("anonymous")
 
 
 def test_submit_review_decision_resolves_when_user_not_in_pause_map():
     gate = HumanInterventionGate()
-    review = gate.request_human_review({
-        "query_url": "Patient?bad=true",
-        "user_id": "resolved-user",
-        "validation_result": {"pattern_stats": {"human_threshold_met": True}},
-    })
+    review = gate.request_human_review(
+        {
+            "query_url": "Patient?bad=true",
+            "user_id": "resolved-user",
+            "validation_result": {"pattern_stats": {"human_threshold_met": True}},
+        }
+    )
     gate._paused_users.clear()
 
     resolved = gate.submit_review_decision(

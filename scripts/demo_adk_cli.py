@@ -93,7 +93,7 @@ def run_learner_in_process(name: str, config: dict[str, Any]) -> None:
     print("=" * 78)
     print("Note: learner escalation accumulates pattern history in-process.")
     print("      `adk run` subprocesses do not share validator state.")
-    print(f"Entry point: run_validation_workflow() × {repeat}")
+    print(f"Entry point: run_validation_workflow() x {repeat}")
     print("-" * 78)
 
     reset_workflow_singletons()
@@ -106,7 +106,8 @@ def run_learner_in_process(name: str, config: dict[str, Any]) -> None:
     if last and last["final_output"].get("escalation") == "learner":
         guidance = last.get("learner_guidance") or {}
         if guidance:
-            print(f"\nLearner suggestion: {guidance.get('suggestion', guidance.get('message', ''))}")
+            suggestion = guidance.get("suggestion", guidance.get("message", ""))
+            print(f"\nLearner suggestion: {suggestion}")
 
     print("=" * 78)
 

@@ -15,7 +15,7 @@ from _demo_utils import (
 
 add_project_root_to_path()
 
-from src.agentic_layer.graph.validation_workflow import run_validation_workflow
+from src.agentic_layer.graph.validation_workflow import run_validation_workflow  # noqa: E402
 
 
 def run_scenario(
@@ -32,12 +32,14 @@ def run_scenario(
         mode=mode,
     )
 
-    result = run_validation_workflow({
-        "query_url": query_url,
-        "server_key": "hapi",
-        "user_id": user_id,
-        "mode": mode,
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": query_url,
+            "server_key": "hapi",
+            "user_id": user_id,
+            "mode": mode,
+        }
+    )
 
     summarize_final_output(result["final_output"])
 

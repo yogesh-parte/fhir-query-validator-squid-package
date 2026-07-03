@@ -7,15 +7,15 @@ from __future__ import annotations
 
 import time
 import uuid
-from enum import Enum
-from typing import Any, Dict, Optional
+from enum import StrEnum
+from typing import Any
 
 from ..auth.operator import verify_human_gate_operator
 from ..utils.audit_log import AuditLog
 from ..utils.logging_safe import format_query_log_label, verbose_logging_enabled
 
 
-class InterventionSeverity(str, Enum):
+class InterventionSeverity(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -27,12 +27,12 @@ class HumanInterventionGate:
     Pause/notify/review/resume workflow for human oversight with audit records.
     """
 
-    def __init__(self, audit_log: Optional[AuditLog] = None) -> None:
+    def __init__(self, audit_log: AuditLog | None = None) -> None:
         self.audit_log = audit_log or AuditLog()
         self._paused_users: dict[str, dict[str, Any]] = {}
         self._pending_reviews: dict[str, dict[str, Any]] = {}
 
-    def classify_severity(self, validation_result: Dict[str, Any]) -> InterventionSeverity:
+    def classify_severity(self, validation_result: dict[str, Any]) -> InterventionSeverity:
         if validation_result.get("high_severity"):
             return InterventionSeverity.CRITICAL
         stats = validation_result.get("pattern_stats", {})
@@ -42,7 +42,7 @@ class HumanInterventionGate:
             return InterventionSeverity.MEDIUM
         return InterventionSeverity.LOW
 
-    def request_human_review(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def request_human_review(self, context: dict[str, Any]) -> dict[str, Any]:
         user_id = context.get("user_id") or "anonymous"
         validation_result = context.get("validation_result", {})
         severity = self.classify_severity(validation_result)
@@ -80,12 +80,16 @@ class HumanInterventionGate:
         print(f"[HumanInterventionGate] Human review requested (severity={severity.value}).")
         self._notify(review_record)
 
-        audit_context = review_record if verbose_logging_enabled() else {
-            "review_id": review_id,
-            "severity": severity.value,
-            "server_key": context.get("server_key"),
-            "query_label": format_query_log_label(context.get("query_url") or ""),
-        }
+        audit_context = (
+            review_record
+            if verbose_logging_enabled()
+            else {
+                "review_id": review_id,
+                "severity": severity.value,
+                "server_key": context.get("server_key"),
+                "query_label": format_query_log_label(context.get("query_url") or ""),
+            }
+        )
 
         audit = self.audit_log.record(
             event_type="human_intervention_requested",
@@ -114,8 +118,8 @@ class HumanInterventionGate:
         reviewer: str,
         decision: str,
         rationale: str,
-        operator_token: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        operator_token: str | None = None,
+    ) -> dict[str, Any]:
         verify_human_gate_operator(operator_token=operator_token, reviewer=reviewer)
 
         review = self._pending_reviews.get(review_id)
@@ -147,7 +151,7 @@ class HumanInterventionGate:
     def is_paused(self, user_id: str) -> bool:
         return user_id in self._paused_users
 
-    def _notify(self, review_record: Dict[str, Any]) -> None:
+    def _notify(self, review_record: dict[str, Any]) -> None:
         # Demo notification channel — replace with email/ticket integration in production.
         print(
             "[HumanInterventionGate] NOTIFICATION → operators: "

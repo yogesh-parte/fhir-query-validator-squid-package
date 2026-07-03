@@ -5,7 +5,7 @@ Provides helpful explanations and suggestions when repeated invalid queries are 
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..utils.query_parser import parse_query_url
 
@@ -18,18 +18,16 @@ class SearchLearnerAgent:
     def provide_guidance(
         self,
         query_url: str,
-        validation_result: Dict[str, Any],
-        interpreted_capability: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        validation_result: dict[str, Any],
+        interpreted_capability: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         print("[SearchLearnerAgent] Providing guidance for repeated invalid queries...")
 
         parsed = parse_query_url(query_url)
         resource_type = parsed.resource_type
         supported_resources = (interpreted_capability or {}).get("supported_resources", {})
         resource_def = supported_resources.get(resource_type, {})
-        param_names = [
-            p["name"] for p in resource_def.get("search_params", []) if p.get("name")
-        ]
+        param_names = [p["name"] for p in resource_def.get("search_params", []) if p.get("name")]
 
         errors = validation_result.get("errors", [])
         error_types = validation_result.get("error_types", [])
@@ -43,8 +41,7 @@ class SearchLearnerAgent:
             )
         if "unknown_parameter" in error_types and param_names:
             suggestions.append(
-                f"Supported search parameters for {resource_type}: "
-                + ", ".join(param_names[:12])
+                f"Supported search parameters for {resource_type}: " + ", ".join(param_names[:12])
             )
         if "unsupported_modifier" in error_types:
             suggestions.append(
@@ -65,9 +62,9 @@ class SearchLearnerAgent:
                 "Repeated invalid queries detected. "
                 + (errors[0] if errors else "Review your query structure.")
             ),
-            "suggestion": suggestions[0] if suggestions else (
-                "Use supported search parameters from the server's CapabilityStatement."
-            ),
+            "suggestion": suggestions[0]
+            if suggestions
+            else ("Use supported search parameters from the server's CapabilityStatement."),
             "suggestions": suggestions,
             "example": example,
             "query_url": query_url,

@@ -4,11 +4,11 @@ Executes validated FHIR search queries.
 """
 
 import time
-from typing import Dict, Any, Optional
+from typing import Any
 
 import httpx
 
-from ..config.settings import get_server_config, get_auth_headers
+from ..config.settings import get_auth_headers, get_server_config
 from ..utils.logging_safe import format_query_log_label
 from ..utils.url_safety import UnsafeQueryUrlError, build_fhir_target_url
 
@@ -21,9 +21,9 @@ class QueryExecutionAgent:
     def execute(
         self,
         query_url: str,
-        server_key: Optional[str] = None,
-        auth_token: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        server_key: str | None = None,
+        auth_token: str | None = None,
+    ) -> dict[str, Any]:
         """
         Execute the query against the FHIR server.
         """

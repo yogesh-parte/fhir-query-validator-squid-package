@@ -1,15 +1,27 @@
-import pytest
-
 from src.agentic_layer.agents.query_validator import QueryValidatorAgent
-
 
 PATIENT_CAPABILITY = {
     "supported_resources": {
         "Patient": {
             "search_params": [
-                {"name": "gender", "type": "token", "modifiers": ["exact", "missing"], "comparators": []},
-                {"name": "birthdate", "type": "date", "modifiers": ["missing"], "comparators": ["gt", "lt"]},
-                {"name": "subject", "type": "reference", "modifiers": ["missing"], "comparators": []},
+                {
+                    "name": "gender",
+                    "type": "token",
+                    "modifiers": ["exact", "missing"],
+                    "comparators": [],
+                },
+                {
+                    "name": "birthdate",
+                    "type": "date",
+                    "modifiers": ["missing"],
+                    "comparators": ["gt", "lt"],
+                },
+                {
+                    "name": "subject",
+                    "type": "reference",
+                    "modifiers": ["missing"],
+                    "comparators": [],
+                },
             ]
         }
     }

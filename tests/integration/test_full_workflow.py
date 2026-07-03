@@ -28,12 +28,14 @@ def test_full_workflow_with_valid_query(mock_get_capability, mock_execute):
         "resource_type": "Bundle",
     }
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "user_id": "integration-test",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "user_id": "integration-test",
+            "mode": "validate_and_execute",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is True
@@ -48,11 +50,13 @@ def test_full_stack_cache_and_execution_agents(mock_client_class):
     http = mock_shared_httpx_client()
     mock_client_class.return_value = http
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "mode": "validate_and_execute",
+        }
+    )
 
     assert result["final_output"]["valid"] is True
     assert result["final_output"]["executed"] is True
@@ -75,12 +79,14 @@ def test_end_to_end_uses_query_execution_agent(mock_get_capability, mock_exec_cl
     )
     mock_exec_client.return_value = exec_http
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "user_id": "integration-e2e-exec",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "user_id": "integration-e2e-exec",
+            "mode": "validate_and_execute",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is True
@@ -95,11 +101,13 @@ def test_end_to_end_uses_query_execution_agent(mock_get_capability, mock_exec_cl
 def test_validate_only_skips_execution(mock_get_capability):
     mock_get_capability.return_value = PATIENT_CAPABILITY
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "mode": "validate_only",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "mode": "validate_only",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is True
@@ -121,12 +129,14 @@ def test_full_workflow_firely_server(mock_get_capability, mock_execute):
         "resource_type": "Bundle",
     }
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "firely",
-        "user_id": "integration-firely",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "firely",
+            "user_id": "integration-firely",
+            "mode": "validate_and_execute",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is True
@@ -150,12 +160,14 @@ def test_mockhealth_workflow_with_api_key(mock_get_capability, mock_execute, mon
         "resource_type": "Bundle",
     }
 
-    result = run_validation_workflow({
-        "query_url": "Patient?_count=1",
-        "server_key": "mockhealth",
-        "user_id": "integration-mockhealth",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?_count=1",
+            "server_key": "mockhealth",
+            "user_id": "integration-mockhealth",
+            "mode": "validate_and_execute",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is True
@@ -179,12 +191,14 @@ def test_mockhealth_auth_token_override(mock_get_capability, mock_execute, monke
         "resource_type": "Bundle",
     }
 
-    result = run_validation_workflow({
-        "query_url": "Patient?_count=1",
-        "server_key": "mockhealth",
-        "auth_token": "runtime-override-token",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?_count=1",
+            "server_key": "mockhealth",
+            "auth_token": "runtime-override-token",
+            "mode": "validate_and_execute",
+        }
+    )
 
     assert result["final_output"]["valid"] is True
     mock_get_capability.assert_called_once_with("mockhealth", auth_token="runtime-override-token")
@@ -194,11 +208,13 @@ def test_mockhealth_missing_api_key_returns_auth_error(monkeypatch):
     monkeypatch.delenv("MOCK_HEALTH_API_KEY", raising=False)
     monkeypatch.setenv("FHIR_USE_AUTH", "false")
 
-    result = run_validation_workflow({
-        "query_url": "Patient?_count=1",
-        "server_key": "mockhealth",
-        "mode": "validate_only",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?_count=1",
+            "server_key": "mockhealth",
+            "mode": "validate_only",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is False
@@ -217,12 +233,14 @@ def test_full_workflow_human_escalation(mock_cache_client):
 
     user = "integration-human-user"
     for _ in range(5):
-        result = run_validation_workflow({
-            "query_url": "Patient?invalid_param=true",
-            "server_key": "hapi",
-            "user_id": user,
-            "mode": "validate_only",
-        })
+        result = run_validation_workflow(
+            {
+                "query_url": "Patient?invalid_param=true",
+                "server_key": "hapi",
+                "user_id": user,
+                "mode": "validate_only",
+            }
+        )
 
     assert result["final_output"]["valid"] is False
     assert result["final_output"]["escalation"] == "human"
@@ -239,19 +257,23 @@ def test_paused_user_blocked_from_subsequent_workflow(mock_cache_client):
 
     user = "integration-paused-user"
     for _ in range(5):
-        run_validation_workflow({
-            "query_url": "Patient?invalid_param=true",
+        run_validation_workflow(
+            {
+                "query_url": "Patient?invalid_param=true",
+                "server_key": "hapi",
+                "user_id": user,
+                "mode": "validate_only",
+            }
+        )
+
+    blocked = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
             "server_key": "hapi",
             "user_id": user,
             "mode": "validate_only",
-        })
-
-    blocked = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "user_id": user,
-        "mode": "validate_only",
-    })
+        }
+    )
 
     assert blocked["final_output"]["valid"] is False
     assert "paused" in blocked["final_output"]["errors"][0].lower()
@@ -264,12 +286,14 @@ def test_human_pause_resume_full_flow(mock_get_capability):
 
     last = None
     for _ in range(5):
-        last = run_validation_workflow({
-            "query_url": "Patient?invalid_param=true",
-            "server_key": "hapi",
-            "user_id": user,
-            "mode": "validate_only",
-        })
+        last = run_validation_workflow(
+            {
+                "query_url": "Patient?invalid_param=true",
+                "server_key": "hapi",
+                "user_id": user,
+                "mode": "validate_only",
+            }
+        )
 
     review_id = last["final_output"]["human_review"]["review_id"]
     resolution = workflow_engine.human_gate.submit_review_decision(
@@ -280,12 +304,14 @@ def test_human_pause_resume_full_flow(mock_get_capability):
     )
     assert resolution["resumed"] is True
 
-    resumed = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "user_id": user,
-        "mode": "validate_only",
-    })
+    resumed = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "user_id": user,
+            "mode": "validate_only",
+        }
+    )
     assert resumed["final_output"]["valid"] is True
 
 
@@ -298,12 +324,14 @@ def test_learner_escalation_after_three_invalid_queries(mock_cache_client):
 
     user = "integration-learner-user"
     for _ in range(3):
-        result = run_validation_workflow({
-            "query_url": "Patient?invalid_param=true",
-            "server_key": "hapi",
-            "user_id": user,
-            "mode": "validate_only",
-        })
+        result = run_validation_workflow(
+            {
+                "query_url": "Patient?invalid_param=true",
+                "server_key": "hapi",
+                "user_id": user,
+                "mode": "validate_only",
+            }
+        )
 
     assert result["final_output"]["escalation"] == "learner"
     assert result["final_output"]["pattern_detected"] is True
@@ -315,11 +343,13 @@ def test_learner_escalation_after_three_invalid_queries(mock_cache_client):
 def test_no_escalation_without_user_id(mock_get_capability):
     mock_get_capability.return_value = PATIENT_CAPABILITY
 
-    result = run_validation_workflow({
-        "query_url": "Patient?invalid_param=true",
-        "server_key": "hapi",
-        "mode": "validate_only",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?invalid_param=true",
+            "server_key": "hapi",
+            "mode": "validate_only",
+        }
+    )
 
     assert result["final_output"]["valid"] is False
     assert result["final_output"]["escalation"] == "none"
@@ -330,12 +360,14 @@ def test_no_escalation_without_user_id(mock_get_capability):
 def test_sensitive_chained_parameter_sets_high_severity(mock_get_capability):
     mock_get_capability.return_value = PATIENT_CAPABILITY
 
-    result = run_validation_workflow({
-        "query_url": "Patient?subject.name=Smith",
-        "server_key": "hapi",
-        "user_id": "integration-chain-user",
-        "mode": "validate_only",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?subject.name=Smith",
+            "server_key": "hapi",
+            "user_id": "integration-chain-user",
+            "mode": "validate_only",
+        }
+    )
 
     assert result["validation_result"]["high_severity"] is True
     assert any("sensitive" in w.lower() for w in result["validation_result"]["warnings"])
@@ -348,11 +380,13 @@ def test_sensitive_chained_parameter_sets_high_severity(mock_get_capability):
 def test_unknown_resource_type_fails_validation(mock_get_capability):
     mock_get_capability.return_value = PATIENT_CAPABILITY
 
-    result = run_validation_workflow({
-        "query_url": "Observation?code=1234",
-        "server_key": "hapi",
-        "mode": "validate_only",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Observation?code=1234",
+            "server_key": "hapi",
+            "mode": "validate_only",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is False
@@ -368,12 +402,14 @@ def test_execution_auth_failure_surfaces_error_result(mock_get_capability, mock_
     exec_http.get.return_value = mock_http_response(401)
     mock_exec_client.return_value = exec_http
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "mockhealth",
-        "auth_token": "bad-token",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "mockhealth",
+            "auth_token": "bad-token",
+            "mode": "validate_and_execute",
+        }
+    )
 
     output = result["final_output"]
     assert output["valid"] is True
@@ -392,12 +428,14 @@ def test_execution_forbidden_returns_authorization_error(mock_get_capability, mo
     exec_http.get.return_value = mock_http_response(403)
     mock_exec_client.return_value = exec_http
 
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "mockhealth",
-        "auth_token": "limited-token",
-        "mode": "validate_and_execute",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "mockhealth",
+            "auth_token": "limited-token",
+            "mode": "validate_and_execute",
+        }
+    )
 
     assert result["final_output"]["executed"] is False
     assert result["execution_result"]["error_type"] == "authorization_failed"
@@ -412,12 +450,14 @@ def test_cache_metadata_401_raises_authentication_required(mock_cache_client):
     mock_cache_client.return_value = cache_http
 
     with pytest.raises(AuthenticationRequiredError):
-        run_validation_workflow({
-            "query_url": "Patient?gender=male",
-            "server_key": "mockhealth",
-            "auth_token": "bad-token",
-            "mode": "validate_only",
-        })
+        run_validation_workflow(
+            {
+                "query_url": "Patient?gender=male",
+                "server_key": "mockhealth",
+                "auth_token": "bad-token",
+                "mode": "validate_only",
+            }
+        )
 
 
 @patch("src.agentic_layer.agents.cache_agent.httpx.Client")
@@ -428,11 +468,13 @@ def test_cache_metadata_500_raises_capability_fetch(mock_cache_client):
     mock_cache_client.return_value = cache_http
 
     with pytest.raises(CapabilityFetchError):
-        run_validation_workflow({
-            "query_url": "Patient?gender=male",
-            "server_key": "hapi",
-            "mode": "validate_only",
-        })
+        run_validation_workflow(
+            {
+                "query_url": "Patient?gender=male",
+                "server_key": "hapi",
+                "mode": "validate_only",
+            }
+        )
 
 
 @patch("src.agentic_layer.agents.cache_agent.httpx.Client")
@@ -443,11 +485,13 @@ def test_cache_metadata_network_error_raises_capability_fetch(mock_cache_client)
     mock_cache_client.return_value = cache_http
 
     with pytest.raises(CapabilityFetchError):
-        run_validation_workflow({
-            "query_url": "Patient?gender=male",
-            "server_key": "hapi",
-            "mode": "validate_only",
-        })
+        run_validation_workflow(
+            {
+                "query_url": "Patient?gender=male",
+                "server_key": "hapi",
+                "mode": "validate_only",
+            }
+        )
 
 
 @patch("httpx.Client")
@@ -461,16 +505,20 @@ def test_workflow_cache_304_reuses_capability(mock_client_class):
     ]
     mock_client_class.return_value = http
 
-    first = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "mode": "validate_only",
-    })
-    second = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "hapi",
-        "mode": "validate_only",
-    })
+    first = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "mode": "validate_only",
+        }
+    )
+    second = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "hapi",
+            "mode": "validate_only",
+        }
+    )
 
     assert first["final_output"]["valid"] is True
     assert second["final_output"]["valid"] is True
@@ -479,10 +527,12 @@ def test_workflow_cache_304_reuses_capability(mock_client_class):
 
 
 def test_unknown_server_key_returns_error():
-    result = run_validation_workflow({
-        "query_url": "Patient?gender=male",
-        "server_key": "does-not-exist",
-        "mode": "validate_only",
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": "Patient?gender=male",
+            "server_key": "does-not-exist",
+            "mode": "validate_only",
+        }
+    )
     assert result["final_output"]["valid"] is False
     assert "Unknown server_key" in result["final_output"]["errors"][0]

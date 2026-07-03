@@ -21,7 +21,6 @@ import os
 
 from _demo_utils import (
     add_project_root_to_path,
-    mockhealth_api_key,
     print_scenario_header,
     require_mockhealth_key,
     reset_workflow_singletons,
@@ -30,7 +29,7 @@ from _demo_utils import (
 
 add_project_root_to_path()
 
-from src.agentic_layer.graph.validation_workflow import run_validation_workflow
+from src.agentic_layer.graph.validation_workflow import run_validation_workflow  # noqa: E402
 
 SERVER_KEY = "mockhealth"
 DEFAULT_QUERY = "Patient?_count=1"
@@ -50,12 +49,14 @@ def run_scenario(
         mode=mode,
     )
 
-    result = run_validation_workflow({
-        "query_url": query_url,
-        "server_key": SERVER_KEY,
-        "user_id": user_id,
-        "mode": mode,
-    })
+    result = run_validation_workflow(
+        {
+            "query_url": query_url,
+            "server_key": SERVER_KEY,
+            "user_id": user_id,
+            "mode": mode,
+        }
+    )
 
     summarize_final_output(result["final_output"])
 
@@ -66,7 +67,9 @@ def run_scenario(
 
     if result["final_output"].get("human_review_required"):
         review = result["final_output"].get("human_review") or {}
-        print(f"\nHuman Review     : severity={review.get('severity')} id={review.get('review_id')}")
+        severity = review.get("severity")
+        review_id = review.get("review_id")
+        print(f"\nHuman Review     : severity={severity} id={review_id}")
 
     print("=" * 78 + "\n")
     return result
@@ -77,7 +80,7 @@ def run_demo(default_mode: str) -> None:
     print("FHIR Query Validator Factory — mock.health Loop Demo\n")
     print(f"Server     : {SERVER_KEY} → https://api.mock.health/fhir")
     print("API Key    : (set) (from MOCK_HEALTH_API_KEY)")
-    print(f"Auth scope : Bearer token forwarded to cache + execution agents")
+    print("Auth scope : Bearer token forwarded to cache + execution agents")
     print(f"Env file   : .env.local loaded={os.path.exists('.env.local')}\n")
 
     reset_workflow_singletons()

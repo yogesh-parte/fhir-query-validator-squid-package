@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.agentic_layer.agents.cache_agent import CacheAgent
 
 

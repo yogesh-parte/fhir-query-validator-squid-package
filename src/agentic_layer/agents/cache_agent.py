@@ -5,12 +5,12 @@ Handles fetching and caching of CapabilityStatement with hybrid invalidation.
 
 import os
 import time
-from typing import Optional, Dict, Any
+from typing import Any
 
 import httpx
 
 from ..auth.provider import auth_cache_suffix
-from ..config.settings import get_server_config, get_auth_headers
+from ..config.settings import get_auth_headers, get_server_config
 
 
 class CacheAgent:
@@ -21,7 +21,7 @@ class CacheAgent:
 
     def __init__(self, ttl_seconds: int = 7 * 24 * 3600):  # Default 7 days
         self.ttl_seconds = ttl_seconds
-        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._cache: dict[str, dict[str, Any]] = {}
 
     def _cache_key(self, server_key: str, auth_headers: dict[str, str]) -> str:
         return f"{server_key}{auth_cache_suffix(auth_headers)}"
@@ -29,7 +29,7 @@ class CacheAgent:
     def _check_admin_invalidation(
         self,
         server_key: str,
-        auth_token: Optional[str] = None,
+        auth_token: str | None = None,
     ) -> None:
         """Honor admin/config invalidation signals from environment."""
         global_flag = os.getenv("FHIR_CACHE_INVALIDATE", "false").lower() == "true"
@@ -40,9 +40,9 @@ class CacheAgent:
 
     def get_capability_statement(
         self,
-        server_key: Optional[str] = None,
-        auth_token: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        server_key: str | None = None,
+        auth_token: str | None = None,
+    ) -> dict[str, Any]:
         """
         Get CapabilityStatement. Uses cache if valid, otherwise fetches.
         """
@@ -90,8 +90,8 @@ class CacheAgent:
         self,
         server,
         auth_headers: dict[str, str],
-        etag: Optional[str] = None,
-        cached_data: Optional[Dict[str, Any]] = None,
+        etag: str | None = None,
+        cached_data: dict[str, Any] | None = None,
     ) -> Any:
         """
         Fetch CapabilityStatement from FHIR server.
@@ -116,7 +116,7 @@ class CacheAgent:
             response.raise_for_status()
             return response.json(), response.headers.get("ETag")
 
-    def invalidate(self, server_key: str, auth_token: Optional[str] = None):
+    def invalidate(self, server_key: str, auth_token: str | None = None):
         """Force invalidation of cache for a server (auth-scoped when provided)."""
         server = get_server_config(server_key)
         auth_headers = get_auth_headers(server, auth_token_override=auth_token)

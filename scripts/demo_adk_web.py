@@ -30,10 +30,8 @@ import time
 from typing import Any
 
 import httpx
-
 from _demo_utils import (
     HAPI_DEMO_SCENARIOS,
-    adk_available,
     agent_dir,
     parse_adk_events,
     project_root,

@@ -7,15 +7,19 @@ import pytest
 
 PATIENT_CAPABILITY = {
     "resourceType": "CapabilityStatement",
-    "rest": [{
-        "resource": [{
-            "type": "Patient",
-            "searchParam": [
-                {"name": "gender", "type": "token"},
-                {"name": "subject", "type": "reference"},
+    "rest": [
+        {
+            "resource": [
+                {
+                    "type": "Patient",
+                    "searchParam": [
+                        {"name": "gender", "type": "token"},
+                        {"name": "subject", "type": "reference"},
+                    ],
+                }
             ],
-        }],
-    }],
+        }
+    ],
 }
 
 

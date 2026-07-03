@@ -1,7 +1,4 @@
-import os
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from src.agentic_layer.auth.provider import (
     BearerTokenProvider,

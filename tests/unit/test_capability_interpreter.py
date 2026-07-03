@@ -4,15 +4,19 @@ from src.agentic_layer.agents.capability_interpreter import CapabilityInterprete
 def test_interpreter_extracts_modifiers_and_comparators():
     capability = {
         "resourceType": "CapabilityStatement",
-        "rest": [{
-            "resource": [{
-                "type": "Patient",
-                "searchParam": [
-                    {"name": "gender", "type": "token"},
-                    {"name": "birthdate", "type": "date"},
+        "rest": [
+            {
+                "resource": [
+                    {
+                        "type": "Patient",
+                        "searchParam": [
+                            {"name": "gender", "type": "token"},
+                            {"name": "birthdate", "type": "date"},
+                        ],
+                    }
                 ],
-            }],
-        }],
+            }
+        ],
     }
     agent = CapabilityInterpreterAgent()
     result = agent.interpret(capability)
@@ -38,13 +42,17 @@ def test_interpreter_extracts_interactions_and_software():
         "resourceType": "CapabilityStatement",
         "fhirVersion": "4.0.1",
         "software": {"name": "TestServer"},
-        "rest": [{
-            "resource": [{
-                "type": "Patient",
-                "interaction": [{"code": "search-type"}, {"code": "read"}],
-                "searchParam": [{"name": "name", "type": "string"}],
-            }],
-        }],
+        "rest": [
+            {
+                "resource": [
+                    {
+                        "type": "Patient",
+                        "interaction": [{"code": "search-type"}, {"code": "read"}],
+                        "searchParam": [{"name": "name", "type": "string"}],
+                    }
+                ],
+            }
+        ],
     }
     agent = CapabilityInterpreterAgent()
     result = agent.interpret(capability)
