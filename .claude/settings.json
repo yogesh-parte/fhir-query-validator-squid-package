@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "iusztinpaul": {
+      "source": {
+        "source": "github",
+        "repo": "iusztinpaul/squid"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "squid@iusztinpaul": true
+  }
+}
