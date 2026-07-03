@@ -1,9 +1,17 @@
-"""Shared fixtures for integration tests."""
+"""Shared fixtures for integration tests (mock and live)."""
 
+from __future__ import annotations
+
+import os
 from unittest.mock import MagicMock
 
 import httpx
 import pytest
+
+from src.agentic_layer.config.settings import get_server_config
+
+PUBLIC_SERVER_KEYS = ("hapi", "firely", "spark")
+LIVE_METADATA_TIMEOUT = 15.0
 
 PATIENT_CAPABILITY = {
     "resourceType": "CapabilityStatement",
@@ -26,6 +34,45 @@ PATIENT_CAPABILITY = {
 @pytest.fixture
 def patient_capability():
     return PATIENT_CAPABILITY
+
+
+def metadata_url(server_key: str) -> str:
+    """Return the CapabilityStatement metadata URL for a registered server."""
+    server = get_server_config(server_key)
+    return f"{server.base_url.rstrip('/')}/metadata"
+
+
+def is_server_reachable(server_key: str, timeout: float = LIVE_METADATA_TIMEOUT) -> bool:
+    """Return True when a server's metadata endpoint responds with HTTP 200."""
+    try:
+        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+            response = client.get(metadata_url(server_key))
+            return response.status_code == 200
+    except httpx.HTTPError:
+        return False
+
+
+def require_reachable_server(server_key: str) -> None:
+    """Skip the current test when the target FHIR server is offline."""
+    if not is_server_reachable(server_key):
+        pytest.skip(f"FHIR server '{server_key}' is unreachable")
+
+
+def require_mockhealth_api_key() -> str:
+    """Skip unless MOCK_HEALTH_API_KEY is configured."""
+    api_key = os.getenv("MOCK_HEALTH_API_KEY")
+    if not api_key:
+        pytest.skip("MOCK_HEALTH_API_KEY not set — skipping mock.health live test")
+    return api_key
+
+
+@pytest.fixture
+def reachable_public_servers() -> list[str]:
+    """Yield public server keys that respond to metadata requests."""
+    online = [key for key in PUBLIC_SERVER_KEYS if is_server_reachable(key)]
+    if not online:
+        pytest.skip("No public FHIR test servers are reachable")
+    return online
 
 
 def mock_http_response(status_code: int, json_data: dict | None = None):
