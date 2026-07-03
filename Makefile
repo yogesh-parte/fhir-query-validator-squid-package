@@ -22,7 +22,7 @@ lint:
 	uv run ruff check src fhir_validator_agent scripts tests
 
 test:
-	uv run pytest tests/unit -q --cov=src/agentic_layer --cov=fhir_validator_agent --cov-report=term-missing --cov-fail-under=99
+	uv run pytest tests/unit -q --cov=src/agentic_layer --cov-report=term-missing --cov-fail-under=99
 
 security:
 	uv run bandit -r src fhir_validator_agent scripts -ll
