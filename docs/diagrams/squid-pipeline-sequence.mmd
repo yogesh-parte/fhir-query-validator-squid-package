@@ -1,4 +1,3 @@
-```mermaid
 sequenceDiagram
     autonumber
     participant User
@@ -37,7 +36,7 @@ sequenceDiagram
     Workflow->>Validator: Validate query against CapabilityStatement
     alt Query invalid or pattern detected
         Validator->>Rule: Report failure + context
-        Rule->>Rule: Check thresholds (3/10min → learner, 5/15min → human)
+        Rule->>Rule: Check thresholds (3/10min to learner, 5/15min to human)
         alt Learner triggered
             Rule->>Rule: Generate suggestions
             Rule-->>Workflow: Learner output
@@ -57,7 +56,3 @@ sequenceDiagram
     end
 
     Workflow-->>User: Final structured output + full audit trail
-```
-
----
-**How to render**: Paste into https://mermaid.live

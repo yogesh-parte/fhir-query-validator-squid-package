@@ -1,40 +1,40 @@
-```mermaid
-%% C4-inspired Context + Container view for FHIR Query Validator with Squid
-C4Context
-    title FHIR Query Validator Factory — Squid + Grok Build Implementation
 
-    Person(developer, "Developer / AI Engineer", "Uses Grok Build + Squid to implement and evolve the system")
-    Person(human_reviewer, "Human Reviewer", "Reviews escalations and makes override decisions")
+    flowchart LR
+    %% People
+    developer["Developer / AI Engineer<br/>Uses Grok Build + Squid to implement and evolve the system"]
+    human_reviewer["Human Reviewer<br/>Reviews escalations and makes override decisions"]
 
-    System_Boundary(fhir_validator, "FHIR Query Validator Factory") {
-        Container(squid, "Squid Software Factory", "Grok Build + Multi-Agent Pipeline", "PA → SWE → Tester → PR Reviewer → On-Call with human gates")
-        Container(workflow, "Workflow Orchestrator", "Google ADK 2.0 or Python-native", "Coordinates specialist agents and feedback loops")
-        
-        Container_Boundary(agents, "Specialist Agents") {
-            Component(cache, "CacheAgent", "Python + httpx", "Fetches & caches CapabilityStatement with ETag/304 support")
-            Component(validator, "QueryValidator Agent", "Python + Pydantic", "Validates queries against CapabilityStatement + detects patterns")
-            Component(executor, "QueryExecution Agent", "Python + httpx", "Executes validated queries and structures results")
-            Component(rule, "Rule + Search Learner Agents", "Python", "Pattern detection, learner suggestions, escalation decisions")
-            Component(human_gate, "HumanInterventionGate", "Python", "Pause/resume, context packaging, human decision recording")
-        }
-    }
+    %% External Systems
+    fhir_servers["FHIR Servers<br/>HAPI, Firely, mock.health, etc."]
+    langfuse["Langfuse<br/>Optional observability and tracing"]
 
-    System_Ext(fhir_servers, "FHIR Servers", "HAPI, Firely, mock.health, etc.")
-    System_Ext(langfuse, "Langfuse (optional)", "Observability & tracing")
+    %% Main System Boundary
+    subgraph fhir_validator["FHIR Query Validator Factory"]
+        squid["Squid Software Factory<br/>Grok Build + Multi-Agent Pipeline<br/>PA → SWE → Tester → PR Reviewer → On-Call with human gates"]
+        workflow["Workflow Orchestrator<br/>Google ADK 2.0 or Python-native<br/>Coordinates specialist agents and feedback loops"]
 
-    Rel(developer, squid, "Runs /squid-plan and /squid-implement-*")
-    Rel(squid, workflow, "Generates and maintains")
-    Rel(workflow, cache, "Always triggers first")
-    Rel(workflow, validator, "Core validation step")
-    Rel(workflow, executor, "Only on validate_and_execute + valid query")
-    Rel(workflow, rule, "On validation failure patterns")
-    Rel(rule, human_gate, "Escalation when thresholds exceeded")
-    Rel(human_gate, human_reviewer, "Presents context and awaits decision")
-    Rel(cache, fhir_servers, "Fetches CapabilityStatement")
-    Rel(executor, fhir_servers, "Executes search queries")
-    Rel(workflow, langfuse, "Sends traces (optional)")
-    Rel(human_reviewer, workflow, "Resumes or overrides flow")
-```
+        subgraph agents["Specialist Agents"]
+            cache["CacheAgent<br/>Python + httpx<br/>Fetches and caches CapabilityStatement with ETag / 304 support"]
+            validator["QueryValidatorAgent<br/>Python + Pydantic<br/>Validates queries against CapabilityStatement and detects invalid patterns"]
+            executor["QueryExecutionAgent<br/>Python + httpx<br/>Executes validated queries and structures results"]
+            rule["RuleAndSearchLearnerAgents<br/>Python<br/>Detects patterns, suggests learned rules, and decides escalation"]
+            human_gate["HumanInterventionGate<br/>Python<br/>Supports pause / resume, context packaging, and human decision recording"]
+        end
+    end
 
----
-**How to render**: Copy into https://mermaid.live or use Mermaid CLI / VS Code extension.
+    %% Relationships
+    developer -->|"Runs /squid-plan and /squid-implement-*"| squid
+    squid -->|"Generates and maintains"| workflow
+
+    workflow -->|"Always triggers first"| cache
+    workflow -->|"Runs core validation"| validator
+    workflow -->|"Executes only when operation is validate_and_execute and query is valid"| executor
+    workflow -->|"Invokes on validation failure patterns"| rule
+    rule -->|"Escalates when thresholds are exceeded"| human_gate
+
+    human_gate -->|"Presents context and awaits decision"| human_reviewer
+    human_reviewer -->|"Resumes or overrides flow"| workflow
+
+    cache -->|"Fetches CapabilityStatement"| fhir_servers
+    executor -->|"Executes search queries"| fhir_servers
+    workflow -.->|"Sends traces<br/>optional"| langfuse
