@@ -1,0 +1,63 @@
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant SquidPA as Squid Product Architect
+    participant SquidSWE as Squid SWE + Tester
+    participant Workflow as Workflow Orchestrator
+    participant Cache as CacheAgent
+    participant Validator as QueryValidator
+    participant Executor as QueryExecution
+    participant Rule as Rule + Learner
+    participant HumanGate as HumanInterventionGate
+    participant Human as Human Reviewer
+    participant FHIR as FHIR Server
+
+    Note over User,SquidPA: Planning Phase (one-time or on spec change)
+    User->>SquidPA: /squid-plan specs/fhir-query-validator-factory.md
+    SquidPA->>SquidPA: Analyzes all agent specs + architecture
+    SquidPA->>User: Produces detailed Task Plan + ADR
+    User->>SquidPA: Approve plan (Human Gate 1)
+
+    Note over SquidSWE,Workflow: Implementation Phase (Squid pipeline)
+    SquidSWE->>Workflow: Implement / update orchestrator + agent wiring
+    SquidSWE->>Cache: Implement CacheAgent (ETag/304, TTL)
+    SquidSWE->>Validator: Implement validation + pattern hooks
+    SquidSWE->>Executor: Implement safe query execution
+    SquidSWE->>Rule: Implement Rule + Search Learner logic
+    SquidSWE->>HumanGate: Implement pause/resume + context packaging
+
+    Note over Workflow,Human: Runtime Flow (example with escalation)
+    User->>Workflow: Submit query (query_url + server_key + mode)
+    Workflow->>Cache: Get CapabilityStatement (cache or fetch)
+    Cache->>FHIR: GET /metadata (with If-None-Match if ETag exists)
+    FHIR-->>Cache: 200 or 304
+    Cache-->>Workflow: CapabilityStatement + cache_status
+
+    Workflow->>Validator: Validate query against CapabilityStatement
+    alt Query invalid or pattern detected
+        Validator->>Rule: Report failure + context
+        Rule->>Rule: Check thresholds (3/10min → learner, 5/15min → human)
+        alt Learner triggered
+            Rule->>Rule: Generate suggestions
+            Rule-->>Workflow: Learner output
+        else Human escalation required
+            Rule->>HumanGate: Trigger with full context
+            HumanGate->>Human: Present query, errors, history, learner suggestions
+            Human->>HumanGate: Decision (approve / reject / modify)
+            HumanGate-->>Workflow: Resume with decision
+        end
+    else Query valid
+        alt mode == validate_and_execute
+            Workflow->>Executor: Execute query
+            Executor->>FHIR: GET validated query_url
+            FHIR-->>Executor: Bundle or error
+            Executor-->>Workflow: Structured results + metadata
+        end
+    end
+
+    Workflow-->>User: Final structured output + full audit trail
+```
+
+---
+**How to render**: Paste into https://mermaid.live

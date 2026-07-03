@@ -1,0 +1,40 @@
+```mermaid
+%% C4-inspired Context + Container view for FHIR Query Validator with Squid
+C4Context
+    title FHIR Query Validator Factory — Squid + Grok Build Implementation
+
+    Person(developer, "Developer / AI Engineer", "Uses Grok Build + Squid to implement and evolve the system")
+    Person(human_reviewer, "Human Reviewer", "Reviews escalations and makes override decisions")
+
+    System_Boundary(fhir_validator, "FHIR Query Validator Factory") {
+        Container(squid, "Squid Software Factory", "Grok Build + Multi-Agent Pipeline", "PA → SWE → Tester → PR Reviewer → On-Call with human gates")
+        Container(workflow, "Workflow Orchestrator", "Google ADK 2.0 or Python-native", "Coordinates specialist agents and feedback loops")
+        
+        Container_Boundary(agents, "Specialist Agents") {
+            Component(cache, "CacheAgent", "Python + httpx", "Fetches & caches CapabilityStatement with ETag/304 support")
+            Component(validator, "QueryValidator Agent", "Python + Pydantic", "Validates queries against CapabilityStatement + detects patterns")
+            Component(executor, "QueryExecution Agent", "Python + httpx", "Executes validated queries and structures results")
+            Component(rule, "Rule + Search Learner Agents", "Python", "Pattern detection, learner suggestions, escalation decisions")
+            Component(human_gate, "HumanInterventionGate", "Python", "Pause/resume, context packaging, human decision recording")
+        }
+    }
+
+    System_Ext(fhir_servers, "FHIR Servers", "HAPI, Firely, mock.health, etc.")
+    System_Ext(langfuse, "Langfuse (optional)", "Observability & tracing")
+
+    Rel(developer, squid, "Runs /squid-plan and /squid-implement-*")
+    Rel(squid, workflow, "Generates and maintains")
+    Rel(workflow, cache, "Always triggers first")
+    Rel(workflow, validator, "Core validation step")
+    Rel(workflow, executor, "Only on validate_and_execute + valid query")
+    Rel(workflow, rule, "On validation failure patterns")
+    Rel(rule, human_gate, "Escalation when thresholds exceeded")
+    Rel(human_gate, human_reviewer, "Presents context and awaits decision")
+    Rel(cache, fhir_servers, "Fetches CapabilityStatement")
+    Rel(executor, fhir_servers, "Executes search queries")
+    Rel(workflow, langfuse, "Sends traces (optional)")
+    Rel(human_reviewer, workflow, "Resumes or overrides flow")
+```
+
+---
+**How to render**: Copy into https://mermaid.live or use Mermaid CLI / VS Code extension.
